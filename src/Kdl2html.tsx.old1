@@ -1,0 +1,80 @@
+import { createSignal, createMemo, Show } from "solid-js";
+import { parse } from "kdljs";
+
+export default function KdlParserApp() {
+  // 1. KDLの入力テキストを管理するSignal
+  const [kdlInput, setKdlInput] = createSignal(`
+package {
+    name "my-awesome-app"
+    version "1.0.0"
+    dependencies {
+        solid-js "^1.8.0"
+    }
+}
+  `.trim());
+
+  // 2. 入力されたテキストをパースするMemo（入力が変わった時だけ再計算）
+  const parsedResult = createMemo(() => {
+    try {
+      const text = kdlInput();
+      if (!text.trim()) return { success: true, data: [] };
+
+      // kdljsで文字列をパース
+      const output = parse(text);
+      return { success: true, data: output };
+    } catch (error: any) {
+      // パースエラーが発生した場合のキャッチ
+      return { success: false, error: error.message || "パースエラーが発生しました" };
+    }
+  });
+
+  return (
+    <div style={{ padding: "20px", "font-family": "sans-serif" }}>
+      <h1>SolidJS + kdljs 解析器</h1>
+      <p>左側にKDLを入力すると、右側にパースされたJSONがリアルタイムに表示されます。</p>
+
+      <div style={{ display: "flex", gap: "20px", "margin-top": "20px" }}>
+        {/* 左側：KDL入力エリア */}
+        <div style={{ flex: 1 }}>
+          <h3>KDL 入力</h3>
+          <textarea
+            value={kdlInput()}
+            onInput={(e) => setKdlInput(e.currentTarget.value)}
+            rows={15}
+            style={{
+              width: "100%",
+              "font-family": "monospace",
+              padding: "10px",
+              "box-sizing": "border-box"
+            }}
+          />
+        </div>
+
+        {/* 右側：解析結果の出力エリア */}
+        <div style={{ flex: 1 }}>
+          <h3>パース結果 (JSON)</h3>
+          
+          <Show
+            when={parsedResult().success}
+            fallback={
+              <div style={{ color: "red", background: "#fdf2f2", padding: "10px", "border-radius": "4px" }}>
+                <strong>エラー:</strong> {parsedResult().error}
+              </div>
+            }
+          >
+            <pre style={{
+              background: "#f4f4f4",
+              padding: "10px",
+              "border-radius": "4px",
+              overflow: "auto",
+              "max-height": "300px"
+            }}>
+              {JSON.stringify(parsedResult().data, null, 2)}
+            </pre>
+          </Show>
+        </div>
+      </div>
+    </div>
+  );
+}
+
