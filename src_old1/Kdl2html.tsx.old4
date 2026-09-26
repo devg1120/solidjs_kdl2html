@@ -1,0 +1,235 @@
+import { createSignal, createMemo, For, Show, onMount } from "solid-js";
+import { parse } from "kdljs";
+import type { Node } from "kdljs";
+import { Docs } from "./Docs";
+
+// 1. 各ノードを表示する子コンポーネント
+function KdlNodeView(props: { node: Node }) {
+  return (
+    <li style={{ "margin-bottom": "8px" }}>
+      <strong style={{ color: "#0076d6" }}>{props.node.name}</strong>
+
+      <Show when={props.node.values && props.node.values.length > 0}>
+        <span style={{ color: "#d32f2f", "margin-left": "8px" }}>
+          {props.node.values.map((v) => String(v)).join(", ")}
+        </span>
+      </Show>
+
+      <Show
+        when={
+          props.node.properties && Object.keys(props.node.properties).length > 0
+        }
+      >
+        <span
+          style={{
+            color: "#4caf50",
+            "margin-left": "8px",
+            "font-style": "italic",
+          }}
+        >
+          {Object.entries(props.node.properties)
+            .map(([k, v]) => `${k}=${v}`)
+            .join(" ")}
+        </span>
+      </Show>
+
+      <Show when={props.node.children && props.node.children.length > 0}>
+        <ul
+          style={{
+            "padding-left": "20px",
+            "margin-top": "4px",
+            "list-style-type": "circle",
+          }}
+        >
+          <For each={props.node.children}>
+            {(childNode) => <KdlNodeView node={childNode} />}
+          </For>
+        </ul>
+      </Show>
+    </li>
+  );
+}
+
+// 2. メインコンポーネント
+export default function KdlToHtmlApp() {
+  const [selectedValue, setSelectedValue] = createSignal(0);
+  const options = [];
+
+  for (let i = 0; i < Docs.length; i++) {
+    options.push({
+      value: i,
+      label: Docs[i].title,
+    });
+  }
+
+  const [kdlInput, setKdlInput] = createSignal(Docs[selectedValue()].code);
+
+  // --- 画面全体のスクロール・余白リセット ---
+  onMount(() => {
+    // ブラウザ標準のbodyマージン（約8px）を削除し、全体のはみ出しを防ぐ
+    document.body.style.margin = "0";
+    document.body.style.padding = "0";
+    document.body.style.overflow = "hidden"; // 外側全体のスクロールを禁止
+  });
+
+  // --- スプリットパネル用のリサイズロジック ---
+  const [leftWidth, setLeftWidth] = createSignal(50);
+  let containerRef: HTMLDivElement | undefined;
+
+  const handleMouseDown = (e: MouseEvent) => {
+    e.preventDefault();
+    
+    const handleMouseMove = (moveEvent: MouseEvent) => {
+      if (!containerRef) return;
+      const rect = containerRef.getBoundingClientRect();
+      const newWidth = ((moveEvent.clientX - rect.left) / rect.width) * 100;
+      setLeftWidth(Math.max(10, Math.min(90, newWidth)));
+    };
+
+    const handleMouseUp = () => {
+      window.removeEventListener("mousemove", handleMouseMove);
+      window.removeEventListener("mouseup", handleMouseUp);
+    };
+
+    window.addEventListener("mousemove", handleMouseMove);
+    window.addEventListener("mouseup", handleMouseUp);
+  };
+  // ------------------------------------------
+
+  // パースの生データをそのまま保持する（構造確認用）
+  const rawParseResult = createMemo(() => {
+    try {
+      return parse(kdlInput());
+    } catch (e: any) {
+      return { debug_error: e.message || String(e) };
+    }
+  });
+
+  // ループに回すための純粋な配列を抽出
+  const parsedNodes = createMemo<Node[]>(() => {
+    const result = rawParseResult();
+    if (!result) return [];
+    if ("debug_error" in result) return [];
+
+    if (typeof result === "object" && "output" in result) {
+      return (result as any).output || [];
+    }
+    return Array.isArray(result) ? result : [];
+  });
+
+  return (
+    <div 
+      style={{ 
+        border: "solid red 1px", 
+        padding: "10px", 
+        "font-family": "sans-serif", 
+        height: "100vh",            // 画面高ぴったりに固定
+        "box-sizing": "border-box", 
+        display: "flex", 
+        "flex-direction": "column"  
+      }}
+    >
+      <h3 style={{ margin: "0 0 10px 0" }}>SolidJS + kdljs 動作確認ボード</h3>
+
+      <div style={{ "margin-bottom": "10px" }}>
+        <select
+          style={{
+            padding: "8px 20px",
+            "background-color": "#f1f1f1",
+            "font-size": "20px",
+            color: "blue",
+          }}
+          value={selectedValue()}
+          onChange={(e) => {
+            setSelectedValue(Number(e.currentTarget.value));
+            setKdlInput(Docs[Number(e.currentTarget.value)].code);
+          }}
+        >
+          <For each={options}>
+            {(item) => <option value={item.value}>{item.label}</option>}
+          </For>
+        </select>
+      </div>
+
+      {/* スプリットコンテナ */}
+      <div 
+        ref={containerRef}
+        style={{ 
+          display: "flex", 
+          flex: 1,                  
+          minHeight: 0,             
+          width: "100%",
+          "user-select": "none"
+        }}
+      >
+        {/* 左側: 入力エリア */}
+        <div style={{ width: `${leftWidth()}%`, "box-sizing": "border-box", display: "flex", "flex-direction": "column" }}>
+          <h3 style={{ margin: "0 0 5px 0" }}>KDL 入力</h3>
+          <textarea
+            value={kdlInput()}
+            onInput={(e) => setKdlInput(e.currentTarget.value)}
+            style={{
+              width: "100%",
+              flex: 1,              
+              "font-family": "monospace",
+              "font-size": "14px",
+              "line-height": "1.5",
+              padding: "12px",
+              "box-sizing": "border-box",
+              resize: "none"        
+            }}
+          />
+        </div>
+
+        {/* 中央: つまみ（Resizer） */}
+        <div
+          onMouseDown={handleMouseDown}
+          style={{
+            width: "4px",
+            cursor: "col-resize",
+            "background-color": "#ccc",
+            margin: "0 10px",
+            "border-radius": "4px",
+            transition: "background-color 0.2s",
+            height: "100%"          
+          }}
+          onMouseEnter={(e) => e.currentTarget.style.backgroundColor = "#999"}
+          onMouseLeave={(e) => e.currentTarget.style.backgroundColor = "#ccc"}
+        />
+
+        {/* 右側: 構築されたHTML DOM */}
+        <div style={{ width: `${100 - leftWidth()}%`, "box-sizing": "border-box", display: "flex", "flex-direction": "column" }}>
+          <h3 style={{ margin: "0 0 5px 0" }}>変換されたHTML DOM</h3>
+
+          <div style={{ flex: 1, overflow: "auto", border: "solid 1px #000000", padding: "10px" }}>
+            <Show
+              when={parsedNodes().length > 0}
+              fallback={
+                <div style={{ color: "#666" }}>
+                  <p>⚠️ 表示できる有効なノードがありません。</p>
+                  <p>現在の生パースデータ（デバッグ用）:</p>
+                  <pre style={{ background: "#eee", padding: "8px" }}>
+                    {JSON.stringify(rawParseResult(), null, 2)}
+                  </pre>
+                </div>
+              }
+            >
+              <ul
+                style={{
+                  margin: 0,
+                  padding: 0,
+                  "list-style-type": "square",
+                  "padding-left": "20px",
+                }}
+              >
+                <For each={parsedNodes()}>
+                  {(node) => <KdlNodeView node={node} />}
+                </For>
+              </ul>
+            </Show>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}

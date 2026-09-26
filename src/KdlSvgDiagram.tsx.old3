@@ -1,0 +1,262 @@
+import { createMemo, For, Show } from "solid-js";
+import type { Node } from "kdljs";
+
+// スクニップデータ用のインターフェースを定義
+interface NodeStyleInfo {
+  label: string;
+  type: string;
+  color: string;       // 背景色
+  stroke: string;      // 枠線の色
+  textColor: string;   // 文字色
+  isDashed: boolean;   // 点線かどうか
+}
+
+export function KdlSvgDiagram(props: { nodes: Node[] }) {
+  // 1. 各データの抽出
+  const diagramNodes = createMemo(() => props.nodes.filter(n => n.name === "node"));
+  const diagramEdges = createMemo(() => props.nodes.filter(n => n.name === "edge"));
+
+  // 2. 自動レイアウトとスタイルのマッピング計算
+  const nodePositions = createMemo(() => {
+    const nodesList = diagramNodes();
+    const edgesList = diagramEdges();
+    
+    // 各ノードのIDと基本仕様・カスタムスタイル情報を収集
+    const nodeMap = new Map<string, NodeStyleInfo>();
+    nodesList.forEach((n, index) => {
+      const id = n.values && n.values.length > 0 ? String(n.values) : String(n.properties?.id || `n_${index}`);
+      
+      // KDLプロパティから各種スタイル値を抽出（未指定時のデフォルト値をセット）
+      const label = String(n.properties?.label || id);
+      const type = String(n.properties?.type || "rectangle");
+      const color = String(n.properties?.color || (type === "circle" ? "#fbe9e7" : "#e1f5fe"));
+      const stroke = String(n.properties?.stroke || (type === "circle" ? "#d84315" : "#0076d6"));
+      const textColor = String(n.properties?.text_color || "#333");
+      const isDashed = n.properties?.dashed === true || String(n.properties?.dashed) === "true";
+
+      nodeMap.set(id, { label, type, color, stroke, textColor, isDashed });
+    });
+
+    // 接続グラフの構築 (エッジの追跡)
+    const adjList = new Map<string, string[]>();
+    const inDegree = new Map<string, number>();
+
+    nodeMap.forEach((_, id) => {
+      adjList.set(id, []);
+      inDegree.set(id, 0);
+    });
+
+    edgesList.forEach(edge => {
+      const from = String(edge.properties?.from || "");
+      const to = String(edge.properties?.to || "");
+      if (nodeMap.has(from) && nodeMap.has(to)) {
+        adjList.get(from)!.push(to);
+        inDegree.set(to, inDegree.get(to)! + 1);
+      }
+    });
+
+    // 階層（深さ / Y軸レイヤー）決定アルゴリズム
+    const nodeLayers = new Map<string, number>();
+    const queue: string[] = [];
+
+    nodeMap.forEach((_, id) => {
+      if (inDegree.get(id) === 0) {
+        nodeLayers.set(id, 0);
+        queue.push(id);
+      }
+    });
+
+    if (queue.length === 0 && nodeMap.size > 0) {
+      const firstId = nodeMap.keys().next().value;
+      if (firstId) {
+        nodeLayers.set(firstId, 0);
+        queue.push(firstId);
+      }
+    }
+
+    while (queue.length > 0) {
+      const current = queue.shift()!;
+      const currentLayer = nodeLayers.get(current) || 0;
+      const neighbors = adjList.get(current) || [];
+      for (const neighbor of neighbors) {
+        const existingLayer = nodeLayers.get(neighbor);
+        if (existingLayer === undefined || existingLayer < currentLayer + 1) {
+          nodeLayers.set(neighbor, currentLayer + 1);
+          queue.push(neighbor);
+        }
+      }
+    }
+
+    // レイヤー別グループ分け
+    const layerGroups = new Map<number, string[]>();
+    nodeMap.forEach((_, id) => {
+      const layer = nodeLayers.has(id) ? nodeLayers.get(id)! : 0;
+      if (!layerGroups.has(layer)) {
+        layerGroups.set(layer, []);
+      }
+      layerGroups.get(layer)!.push(id);
+    });
+
+    // 座標の割り振り
+    const positions: Record<string, { x: number; y: number } & NodeStyleInfo> = {};
+    const svgWidth = 600;
+    const layerHeight = 110; // 少し広めに調整
+    const startY = 60;
+
+    layerGroups.forEach((nodesInLayer, layerIndex) => {
+      const y = startY + layerIndex * layerHeight;
+      const count = nodesInLayer.length;
+
+      nodesInLayer.forEach((id, nodeIndex) => {
+        const x = count > 1 ? (svgWidth / (count + 1)) * (nodeIndex + 1) : svgWidth / 2;
+        const styleInfo = nodeMap.get(id)!;
+        positions[id] = { x, y, ...styleInfo };
+      });
+    });
+
+    return positions;
+  });
+
+  // 3. 計算された座標とスタイルをベースに、矢印（エッジ）のパスを生成
+  const edgePaths = createMemo(() => {
+    const paths: Array<{ d: string; lx: number; ly: number; label: string; color: string; isDashed: boolean }> = [];
+    const positions = nodePositions();
+
+    diagramEdges().forEach((edge) => {
+      const fromId = String(edge.properties?.from || "");
+      const toId = String(edge.properties?.to || "");
+      const label = String(edge.properties?.label || "");
+      const color = String(edge.properties?.color || "#666");
+      const isDashed = edge.properties?.dashed === true || String(edge.properties?.dashed) === "true";
+
+      const fromNode = positions[fromId];
+      const toNode = positions[toId];
+
+      if (fromNode && toNode) {
+        let d = "";
+        let lx = 0;
+        let ly = 0;
+
+        if (fromNode.y !== toNode.y) {
+          const midY = fromNode.y + (toNode.y - fromNode.y) / 2;
+          d = `M ${fromNode.x} ${fromNode.y} L ${fromNode.x} ${midY} L ${toNode.x} ${midY} L ${toNode.x} ${toNode.y}`;
+          lx = fromNode.x + (toNode.x - fromNode.x) / 2;
+          ly = midY;
+        } else {
+          d = `M ${fromNode.x} ${fromNode.y} L ${toNode.x} ${toNode.y}`;
+          lx = fromNode.x + (toNode.x - fromNode.x) / 2;
+          ly = fromNode.y;
+        }
+
+        paths.push({ d, lx, ly, label, color, isDashed });
+      }
+    });
+
+    return paths;
+  });
+
+  const svgHeight = createMemo(() => {
+    const positions = nodePositions();
+    let maxY = 350;
+    Object.values(positions).forEach(pos => {
+      if (pos.y + 80 > maxY) maxY = pos.y + 80;
+    });
+    return maxY;
+  });
+
+  return (
+    <div style={{ background: "#fff", border: "1px solid #ccc", "border-radius": "4px", padding: "10px" }}>
+      <svg viewBox={`0 0 600 ${svgHeight()}`} width="100%" height="100%" style={{ background: "#fafafa" }}>
+        <defs>
+          {/* マーカーの色をエッジの色に追従させるため、markerUnitsやfillに現在値を引き継げる設定を適用 */}
+          <marker id="arrow" viewBox="0 0 10 10" refX="28" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+            <path d="M 0 1 L 9 5 L 0 9 z" fill="#666" />
+          </marker>
+        </defs>
+
+        {/* 矢印（エッジ）の描画 */}
+        <For each={edgePaths()}>
+          {(path) => (
+            <g>
+              <path
+                d={path.d}
+                fill="none"
+                stroke={path.color}
+                stroke-width="2"
+                marker-end="url(#arrow)"
+                stroke-linejoin="round"
+                stroke-dasharray={path.isDashed ? "5,5" : "none"} // 動的点線スタイル
+              />
+              <Show when={path.label}>
+                <rect
+                  x={path.lx - 35}
+                  y={path.ly - 8}
+                  width="70"
+                  height="16"
+                  fill="#fafafa"
+                  rx="3"
+                />
+                <text
+                  x={path.lx}
+                  y={path.ly}
+                  fill="#555"
+                  font-size="10px"
+                  text-anchor="middle"
+                  dominant-baseline="central"
+                >
+                  {path.label}
+                </text>
+              </Show>
+            </g>
+          )}
+        </For>
+
+        {/* ノードの描画 */}
+        <For each={Object.entries(nodePositions())}>
+          {([id, pos]) => (
+            <g transform={`translate(${pos.x}, ${pos.y})`}>
+              <Show
+                when={pos.type === "circle"}
+                fallback={
+                  // 四角形ノード（動的スタイル適用）
+                  <rect
+                    x="-55"
+                    y="-20"
+                    width="110"
+                    height="40"
+                    rx="6"
+                    fill={pos.color}
+                    stroke={pos.stroke}
+                    stroke-width="2"
+                    stroke-dasharray={pos.isDashed ? "4,4" : "none"}
+                  />
+                }
+              >
+                {/* 円形ノード（動的スタイル適用） */}
+                <circle 
+                  r="25" 
+                  fill={pos.color} 
+                  stroke={pos.stroke} 
+                  stroke-width="2" 
+                  stroke-dasharray={pos.isDashed ? "4,4" : "none"}
+                />
+              </Show>
+
+              {/* 動的テキストカラー適用 */}
+              <text
+                fill={pos.textColor}
+                font-size="11px"
+                font-family="sans-serif"
+                text-anchor="middle"
+                dominant-baseline="central"
+                style={{ "user-select": "none", "font-weight": "bold" }}
+              >
+                {pos.label}
+              </text>
+            </g>
+          )}
+        </For>
+      </svg>
+    </div>
+  );
+}

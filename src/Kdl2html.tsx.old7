@@ -3,9 +3,6 @@ import { parse } from "kdljs";
 import type { Node } from "kdljs";
 import { Docs } from "./Docs";
 
-import { KdlSvgDiagram } from "./KdlSvgDiagram";
-
-
 // --- 行番号付きカスタムエディタコンポーネント ---
 function KdlEditor(props: { value: string; onInput: (val: string) => void }) {
   let textareaRef: HTMLTextAreaElement | undefined;
@@ -330,11 +327,6 @@ export default function KdlToHtmlApp() {
     );
   });
 
-  const isDiagramData = createMemo(() => {
-    const nodes = parsedNodes();
-    return nodes.some(n => n.name === "node" || n.name === "edge");
-  });
-
   return (
     <div style={{ border: "solid red 1px", padding: "10px", "font-family": "sans-serif", height: "100vh", "box-sizing": "border-box", display: "flex", "flex-direction": "column" }}>
       <h3 style={{ margin: "0 0 10px 0" }}>SolidJS + kdljs 動作確認ボード</h3>
@@ -448,7 +440,6 @@ export default function KdlToHtmlApp() {
                 </Show>
               }
             >
-{/*
               <Show 
                 when={isRootTable()} 
                 fallback={
@@ -461,28 +452,7 @@ export default function KdlToHtmlApp() {
               >
                 <KdlTableView rows={parsedNodes()} />
               </Show>
-*/}
-{/* 【条件スイッチを拡張】ダイアグラム定義があればSVGを優先表示 */}
-      <Show
-        when={isDiagramData()}
-        fallback={
-          <Show 
-            when={isRootTable()} 
-            fallback={
-              <ul style={{ margin: 0, padding: 0, "list-style-type": "square", "padding-left": "20px" }}>
-                <For each={parsedNodes()}>{(node) => <KdlNodeView node={node} />}</For>
-              </ul>
-            }
-          >
-            <KdlTableView rows={parsedNodes()} />
-          </Show>
-        }
-      >
-        {/* SVGダイアグラムコンポーネントをここで呼び出し */}
-        <KdlSvgDiagram nodes={parsedNodes()} />
-      </Show>
-    </Show>
-
+            </Show>
 
             {/* 現在のパース構造データ（デバッグ用） */}
             <Show    when={isDebug()} >
