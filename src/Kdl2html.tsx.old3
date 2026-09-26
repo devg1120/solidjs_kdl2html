@@ -1,4 +1,4 @@
-import { createSignal, createMemo, For, Show } from "solid-js";
+import { createSignal, createMemo, For, Show, onCleanup } from "solid-js";
 import { parse } from "kdljs";
 import type { Node } from "kdljs";
 import { Docs } from "./Docs";
@@ -51,15 +51,8 @@ function KdlNodeView(props: { node: Node }) {
 }
 
 // 2. メインコンポーネント
-
 export default function KdlToHtmlApp() {
   const [selectedValue, setSelectedValue] = createSignal(0);
-  /*
-  const options = [
-    { value: 0, label: "りんご" },
-    { value: 1, label: "バナナ" },
-  ];
-*/
   const options = [];
 
   for (let i = 0; i < Docs.length; i++) {
@@ -70,6 +63,34 @@ export default function KdlToHtmlApp() {
   }
 
   const [kdlInput, setKdlInput] = createSignal(Docs[selectedValue()].code);
+
+  // --- スプリットパネル用のリサイズロジック ---
+  // 左パネルの幅（割合%）を管理
+  const [leftWidth, setLeftWidth] = createSignal(50);
+  let containerRef: HTMLDivElement | undefined;
+
+  const handleMouseDown = (e: MouseEvent) => {
+    e.preventDefault();
+    
+    const handleMouseMove = (moveEvent: MouseEvent) => {
+      if (!containerRef) return;
+      // 全体の幅に対するマウス位置の割合を計算
+      const rect = containerRef.getBoundingClientRect();
+      const newWidth = ((moveEvent.clientX - rect.left) / rect.width) * 100;
+      
+      // 極端につぶれないように境界値（10% 〜 90%）を設定
+      setLeftWidth(Math.max(10, Math.min(90, newWidth)));
+    };
+
+    const handleMouseUp = () => {
+      window.removeEventListener("mousemove", handleMouseMove);
+      window.removeEventListener("mouseup", handleMouseUp);
+    };
+
+    window.addEventListener("mousemove", handleMouseMove);
+    window.addEventListener("mouseup", handleMouseUp);
+  };
+  // ------------------------------------------
 
   // パースの生データをそのまま保持する（構造確認用）
   const rawParseResult = createMemo(() => {
@@ -86,17 +107,15 @@ export default function KdlToHtmlApp() {
     if (!result) return [];
     if ("debug_error" in result) return [];
 
-    // オブジェクトの中に { output: [...] } がある場合
     if (typeof result === "object" && "output" in result) {
       return (result as any).output || [];
     }
-    // 直接配列が返ってきている場合
     return Array.isArray(result) ? result : [];
   });
 
   return (
-    <div style={{ padding: "10px", "font-family": "sans-serif" }}>
-      <h2>SolidJS + kdljs 動作確認ボード</h2>
+    <div style={{ border: "solid red 1px", padding: "0px 10px", "font-family": "sans-serif", height: "100%" }}>
+      <h3>SolidJS + kdljs 動作確認ボード</h3>
 
       <div>
         <select
@@ -108,46 +127,66 @@ export default function KdlToHtmlApp() {
           }}
           value={selectedValue()}
           onChange={(e) => {
-            setSelectedValue(e.currentTarget.value);
-            setKdlInput(Docs[e.currentTarget.value].code);
+            setSelectedValue(Number(e.currentTarget.value));
+            setKdlInput(Docs[Number(e.currentTarget.value)].code);
           }}
         >
           <For each={options}>
             {(item) => <option value={item.value}>{item.label}</option>}
           </For>
         </select>
-
+{/*
         <p>選択中: {selectedValue()}</p>
+*/}
       </div>
 
-      <div style={{ display: "flex", gap: "20px" }}>
+      {/* コンテナ（計算の基準となるDOM要素） */}
+      <div 
+        ref={containerRef}
+        style={{ 
+          display: "flex", 
+	  height: "70vh",
+          width: "100%",
+          "user-select": "none" // ドラッグ中のテキスト選択を防ぐ
+        }}
+      >
         {/* 左側: 入力エリア */}
-        <div style={{ flex: 1 }}>
+        <div style={{ width: `${leftWidth()}%`, "box-sizing": "border-box" }}>
           <h3>KDL 入力</h3>
           <textarea
             value={kdlInput()}
             onInput={(e) => setKdlInput(e.currentTarget.value)}
-            rows={28}
             style={{
               width: "100%",
+              height: "100%",
               "font-family": "monospace",
               "font-size": "14px",
               "line-height": "1.5",
               padding: "12px",
+              "box-sizing": "border-box"
             }}
           />
         </div>
 
-        {/* 右側: 構築されたHTML DOM */}
-        <div style={{ flex: 1 }}>
-          <h3>変換されたHTML DOM</h3>
+        {/* 中央: つまみ（Resizer） */}
+        <div
+          onMouseDown={handleMouseDown}
+          style={{
+            width: "4px",
+            cursor: "col-resize",
+            "background-color": "#ccc",
+            margin: "0 10px",
+            "border-radius": "4px",
+            transition: "background-color 0.2s",
+          }}
+          // マウスホバー時に色を変える
+          onMouseEnter={(e) => e.currentTarget.style.backgroundColor = "#999"}
+          onMouseLeave={(e) => e.currentTarget.style.backgroundColor = "#ccc"}
+        />
 
-          {/* 【チェック1】コンポーネント自体が生きているか確認用の固定文字 */}
-          {/*
-          <div style={{ background: "#e0f7fa", padding: "5px", "margin-bottom": "10px", "font-size": "12px" }}>
-            🟢 枠線の描画システムは正常に動作しています
-          </div>
-	  */}
+        {/* 右側: 構築されたHTML DOM */}
+        <div style={{ width: `${100 - leftWidth()}%`, "box-sizing": "border-box" }}>
+          <h3>変換されたHTML DOM</h3>
 
           <Show
             when={parsedNodes().length > 0}
@@ -161,10 +200,9 @@ export default function KdlToHtmlApp() {
               </div>
             }
           >
-            {/* HTMLツリーを構築 */}
             <ul
               style={{
-                margin: "20px",
+                margin: "20px 0",
                 padding: "20px",
                 border: "solid 1px #000000",
                 "list-style-type": "square",

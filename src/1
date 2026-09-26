@@ -3,85 +3,6 @@ import { parse } from "kdljs";
 import type { Node } from "kdljs";
 import { Docs } from "./Docs";
 
-// --- 行番号付きカスタムエディタコンポーネント ---
-function KdlEditor(props: { value: string; onInput: (val: string) => void }) {
-  let textareaRef: HTMLTextAreaElement | undefined;
-  let lineNumbersRef: HTMLDivElement | undefined;
-
-  // 改行コードの数から行数配列 [1, 2, 3, ...] を動的に生成
-  const lines = createMemo(() => {
-    const count = props.value.split("\n").length;
-    return Array.from({ length: Math.max(1, count) }, (_, i) => i + 1);
-  });
-
-  // textareaのスクロール位置を行番号表示用のコンテナへ完全に同期させる
-  const handleScroll = () => {
-    if (textareaRef && lineNumbersRef) {
-      lineNumbersRef.scrollTop = textareaRef.scrollTop;
-    }
-  };
-
-  return (
-    <div style={{
-      display: "flex",
-      flex: 1,
-      border: "1px solid #ccc",
-      "font-family": "monospace",
-      "font-size": "14px",
-      "line-height": "1.5",
-      background: "#fff",
-      overflow: "hidden",
-      position: "relative"
-    }}>
-      {/* 行番号表示エリア */}
-      <div
-        ref={lineNumbersRef}
-        style={{
-          width: "45px",
-          padding: "12px 0",
-          "background-color": "#f7f7f7",
-          "color": "#999",
-          "text-align": "right",
-          "padding-right": "8px",
-          "user-select": "none",
-          overflow: "hidden",
-          "box-sizing": "border-box",
-          "border-right": "1px solid #ddd"
-        }}
-      >
-        <For each={lines()}>
-          {(line) => <div style={{ height: "21px" }}>{line}</div>}
-        </For>
-      </div>
-
-      {/* テキスト入力エリア */}
-      <textarea
-        ref={textareaRef}
-        value={props.value}
-        onInput={(e) => {
-          props.onInput(e.currentTarget.value);
-          handleScroll();
-        }}
-        onScroll={handleScroll}
-        style={{
-          flex: 1,
-          border: "none",
-          outline: "none",
-          padding: "12px",
-          resize: "none",
-          "font-family": "inherit",
-          "font-size": "inherit",
-          "line-height": "21px", // 1.5line-height(14px * 1.5)に完全に固定してズレを防止
-          "white-space": "pre",
-          "overflow-x": "auto",
-          "overflow-y": "auto",
-          "box-sizing": "border-box"
-        }}
-      />
-    </div>
-  );
-}
-
 // --- テーブル表示用のコンポーネント ---
 function KdlTableView(props: { rows: Node[] }) {
   const headers = createMemo(() => {
@@ -149,7 +70,7 @@ function KdlTableView(props: { rows: Node[] }) {
   );
 }
 
-// --- 各ノードを表示する子コンポーネント ---
+// 1. 各ノードを表示する子コンポーネント
 function KdlNodeView(props: { node: Node }) {
   const shouldRenderTable = createMemo(() => {
     return props.node.children && props.node.children.some(child => 
@@ -195,10 +116,6 @@ function KdlNodeView(props: { node: Node }) {
 // 2. メインコンポーネント
 export default function KdlToHtmlApp() {
   const [selectedValue, setSelectedValue] = createSignal(0);
-
-  const [isDebug, setIsDebug] = createSignal(false);
-  const toggle_debug = () => setIsDebug(!isDebug());
-
   const options = [];
 
   for (let i = 0; i < Docs.length; i++) {
@@ -234,71 +151,63 @@ export default function KdlToHtmlApp() {
     window.addEventListener("mousemove", handleMouseMove);
     window.addEventListener("mouseup", handleMouseUp);
   };
+/*
+  const rawParseResult = createMemo(() => {
+    try {
+      return parse(kdlInput());
+    } catch (e: any) {
+      return { debug_error: e.message || String(e) };
+    }
+  });
+*/
+/*
+  const parseError = createMemo<string | null>(() => {
+    const result = rawParseResult();
+    if (result && typeof result === "object" && "debug_error" in result) {
+      return (result as any).debug_error;
+    }
+    return null;
+  });
+*/
 
-  // パースの生データを保持する（kdljs/Chevrotain の内部エラー構造から数値を完全救出）
+  // パースの生データを保持する（行番号・列番号の抽出に対応）
   const rawParseResult = createMemo(() => {
     try {
       const result = parse(kdlInput());
       
-      // パターンA: kdljsがエラー配列を戻り値オブジェクトに含めて返してきた場合
+      // kdljsがerrors配列を返してきた場合
       if (result && typeof result === "object" && "errors" in result && Array.isArray(result.errors) && result.errors.length > 0) {
-        const firstError = result.errors[0]; // 配列の最初の要素を取得
-        
-        // Chevrotainのトークン情報から行と列を最優先でサルベージ
-        const line = firstError.token?.startLine || firstError.previousToken?.startLine || firstError.line || null;
-        const column = firstError.token?.startColumn || firstError.previousToken?.startColumn || firstError.column || null;
-
+        const firstError = result.errors[0];
         return { 
           debug_error: firstError.message || "KDL構文エラーが発生しました",
-          error_line: line,
-          error_column: column
+          // 1つ目のエラーの行番号と列番号を取得（kdljsは内部で1始まりの数値を保持しています）
+          error_line: firstError.line || null,
+          error_column: firstError.column || null
         };
       }
       
       return result;
     } catch (e: any) {
-      // パターンB: 完全に例外（Exception）としてキャッチされた場合
-      const errorMsg = e.message || String(e);
-      
-      // 文字列（例: "Expecting ... at line 1, column 1"）から数値を強制抽出する安全網
-      const lineMatch = errorMsg.match(/line\s*(\d+)/i) || errorMsg.match(/(\d+):/);
-      const colMatch = errorMsg.match(/column\s*(\d+)/i) || (lineMatch ? errorMsg.match(/:\s*(\d+)/) : null);
-      
-      const directLine = e.token?.startLine || e.line || (lineMatch ? parseInt(lineMatch, 10) : null);
-      const directCol = e.token?.startColumn || e.column || (colMatch ? parseInt(colMatch, 10) : null);
-
+      // 完全にクラッシュした場合、エラーメッセージから「line 2, column 5」のような文字列を検索して抽出を試みる
+      const lineMatch = e.message?.match(/line (\d+)/);
+      const colMatch = e.message?.match(/column (\d+)/);
       return { 
-        debug_error: errorMsg,
-        error_line: directLine,
-        error_column: directCol
+        debug_error: e.message || String(e),
+        error_line: lineMatch ? parseInt(lineMatch[1], 10) : null,
+        error_column: colMatch ? parseInt(colMatch[1], 10) : null
       };
     }
   });
 
-  // エラーオブジェクトの判定シグナル
+  // エラーオブジェクト全体をそのまま返すように変更
   const parseError = createMemo(() => {
     const result = rawParseResult();
-    
-    // 1. debug_error が含まれている自家製オブジェクトの場合
     if (result && typeof result === "object" && "debug_error" in result) {
       return result as { debug_error: string; error_line: number | null; error_column: number | null };
     }
-    
-    // 2. rawParseResultをすり抜けて errors 配列が直接見つかった場合のアシスト
-    if (result && typeof result === "object" && "errors" in result && Array.isArray(result.errors) && result.errors.length > 0) {
-      const firstErr = result.errors[0];
-      const line = firstErr.token?.startLine || firstErr.previousToken?.startLine || firstErr.line || null;
-      const column = firstErr.token?.startColumn || firstErr.previousToken?.startColumn || firstErr.column || null;
-      
-      return {
-        debug_error: firstErr.message || "KDL構文エラー",
-        error_line: line,
-        error_column: column
-      };
-    }
-    
     return null;
   });
+
 
   const parsedNodes = createMemo<Node[]>(() => {
     const result = rawParseResult();
@@ -333,7 +242,7 @@ export default function KdlToHtmlApp() {
 
       <div style={{ "margin-bottom": "10px" }}>
         <select
-          style={{ padding: "6px 20px", "background-color": "#f1f1f1", "font-size": "16px", color: "blue" }}
+          style={{ padding: "8px 20px", "background-color": "#f1f1f1", "font-size": "20px", color: "blue" }}
           value={selectedValue()}
           onChange={(e) => {
             setSelectedValue(Number(e.currentTarget.value));
@@ -344,32 +253,18 @@ export default function KdlToHtmlApp() {
             {(item) => <option value={item.value}>{item.label}</option>}
           </For>
         </select>
- <button
-      onClick={toggle_debug}
-      style={{
-        "background-color": isDebug() ? "gray" : "#ffffff",
-        "color": isDebug() ? "#ffffff" : "gray",
-        margin : "0px 0px 0px 30px",
-        padding: "6px 20px",
-        border: "none",
-        "border-radius": "3px",
-        cursor: "pointer",
-        "font-size": "14px",
-        transition: "background-color 0.3s"
-      }}
-    >
-      {isDebug() ? "Debug" : "no Debug"}
-    </button>
       </div>
 
       <div ref={containerRef} style={{ display: "flex", flex: 1, minHeight: 0, width: "100%", "user-select": "none" }}>
-        {/* 左側: 改良した行番号付きカスタムテキストエディタ */}
         <div style={{ width: `${leftWidth()}%`, "box-sizing": "border-box", display: "flex", "flex-direction": "column" }}>
           <h3 style={{ margin: "0 0 5px 0" }}>KDL 入力</h3>
-          <KdlEditor value={kdlInput()} onInput={setKdlInput} />
+          <textarea
+            value={kdlInput()}
+            onInput={(e) => setKdlInput(e.currentTarget.value)}
+            style={{ width: "100%", flex: 1, "font-family": "monospace", "font-size": "14px", "line-height": "1.5", padding: "12px", "box-sizing": "border-box", resize: "none" }}
+          />
         </div>
 
-        {/* 中央: つまみ */}
         <div
           onMouseDown={handleMouseDown}
           style={{ width: "4px", cursor: "col-resize", "background-color": "#ccc", margin: "0 10px", "border-radius": "4px", transition: "background-color 0.2s", height: "100%" }}
@@ -377,15 +272,13 @@ export default function KdlToHtmlApp() {
           onMouseLeave={(e) => e.currentTarget.style.backgroundColor = "#ccc"}
         />
 
-        {/* 右側: 構築されたHTML DOM / TABLE */}
         <div style={{ width: `${100 - leftWidth()}%`, "box-sizing": "border-box", display: "flex", "flex-direction": "column" }}>
           <h3 style={{ margin: "0 0 5px 0" }}>変換されたHTML DOM / TABLE</h3>
 
           <div style={{ flex: 1, overflow: "auto", border: "solid 1px #000000", padding: "10px" }}>
             
-            {/* 【行番号・列番号表示に対応したエラーバナー】 */}
             <Show when={parseError()}>
-              {(errorObj) => (
+              {(errorMsg) => (
                 <div style={{
                   background: "#fde8e8",
                   color: "#9b1c1c",
@@ -395,24 +288,9 @@ export default function KdlToHtmlApp() {
                   "margin-bottom": "15px",
                   "font-family": "sans-serif"
                 }}>
-                  <div style={{ display: "flex", "align-items": "center", "gap": "10px", "margin-bottom": "8px" }}>
-                    <strong style={{ "font-size": "15px" }}>
-                      ⚠️ KDL シンタックスエラー
-                    </strong>
-                    <Show when={errorObj().error_line !== null}>
-                      <span style={{
-                        background: "#e02424",
-                        color: "#fff",
-                        padding: "2px 8px",
-                        "border-radius": "12px",
-                        "font-size": "12px",
-                        "font-weight": "bold"
-                      }}>
-                        {errorObj().error_line} 行目 : {errorObj().error_column} 文字目付近
-                      </span>
-                    </Show>
-                  </div>
-                  
+                  <strong style={{ display: "block", "margin-bottom": "5px", "font-size": "15px" }}>
+                    ⚠️ KDL シンタックスエラーが発生しています
+                  </strong>
                   <pre style={{
                     margin: 0,
                     padding: "10px",
@@ -424,7 +302,7 @@ export default function KdlToHtmlApp() {
                     "white-space": "pre-wrap",
                     "line-height": "1.4"
                   }}>
-                    {errorObj().debug_error}
+                    {errorMsg()}
                   </pre>
                 </div>
               )}
@@ -455,14 +333,13 @@ export default function KdlToHtmlApp() {
             </Show>
 
             {/* 現在のパース構造データ（デバッグ用） */}
-            <Show    when={isDebug()} >
-                <div style={{ "margin-top": "20px", "border-top": "2px dashed #ccc", padding: "10px 0" }}>
-                  <p style={{ margin: "0 0 5px 0", "font-size": "12px", color: "#666", "font-weight": "bold" }}>⬇️ 現在のパース構造データ（デバッグ用）</p>
-                  <pre style={{ background: "#f9f9f9", padding: "8px", "font-size": "11px", border: "1px solid #eee" }}>
-                    {JSON.stringify(rawParseResult(), null, 2)}
-                  </pre>
-                </div>
-	    </Show>
+            <div style={{ "margin-top": "20px", "border-top": "2px dashed #ccc", padding: "10px 0" }}>
+              <p style={{ margin: "0 0 5px 0", "font-size": "12px", color: "#666", "font-weight": "bold" }}>⬇️ 現在のパース構造データ（デバッグ用）</p>
+              <pre style={{ background: "#f9f9f9", padding: "8px", "font-size": "11px", border: "1px solid #eee" }}>
+                {JSON.stringify(rawParseResult(), null, 2)}
+              </pre>
+            </div>
+
           </div>
         </div>
       </div>
