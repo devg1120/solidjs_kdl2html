@@ -161,63 +161,18 @@ function KdlNodeView_NodeOff(props: { node: Node , isNodeOff: any}) {
     );
   });
 
-
-// 【機能拡張】KDLプロパティからスタイル設定（背景色を含む）を動的に抽出
-  const textStyle = createMemo(() => {
-    const propsMap = props.node.properties || {};
-    
-    const isBold = propsMap.bold === true || String(propsMap.bold) === "true";
-    const customColor = String(propsMap.color || "#333");
-    const fontSize = String(propsMap.size || "14px");
-    const isItalic = propsMap.italic === true || String(propsMap.italic) === "true";
-    
-    // 【新規追加】背景色のプロパティ（bg_color）を取得。未指定なら transparent（透明）
-    const customBgColor = propsMap.bg_color ? String(propsMap.bg_color) : "transparent";
-
-    return {
-      "font-weight": isBold ? "bold" : "normal",
-      "color": customColor,
-      "font-size": fontSize,
-      "font-style": isItalic ? "italic" : "normal",
-      "background-color": customBgColor,
-      // 背景色が設定されている場合のみ、見栄えを整えるための余白と角丸を追加
-      "padding": customBgColor !== "transparent" ? "2px 6px" : "0px",
-      "border-radius": customBgColor !== "transparent" ? "3px" : "0px",
-      "line-height": "1.6"
-    };
-  });
-
-
-
-  // 【機能拡張】装飾用のスタイルプロパティ（bg_colorを追加）を除外してテキストを抽出
-  const displayPropertyValues = createMemo(() => {
-    if (!props.node.properties) return [];
-    
-    return Object.entries(props.node.properties)
-      .filter(([key]) => !["bold", "color", "size", "italic", "bg_color"].includes(key)) // bg_color もテキスト出力から除外
-      .map(([_, val]) => String(val));
-  });
-
   return (
     <li style={{ "margin-bottom": "8px", "list-style-type": "none", "margin-left": "10px" }}>
       {/* 【変更箇所】ノード名の描画を完全に削除しました。本文(values)とプロパティのみをマッピングします */}
 
       {/* 本文テキスト（値）の表示：ノード名が消えたため、左端にスッキリ配置されるようmarginを調整 */}
-      {/*
       <Show when={props.node.values && props.node.values.length > 0}>
         <span style={{ color: "#333", "font-size": "14px" }}>
           {props.node.values.map((v) => String(v)).join(", ")}
         </span>
       </Show>
-      */}
-      <Show when={props.node.values && props.node.values.length > 0}>
-        <span style={textStyle()}>
-          {props.node.values.map((v) => String(v)).join(", ")}
-        </span>
-      </Show>
 
       {/* プロパティ（属性）の表示：値がない場合はこれが先頭になります */}
-      {/*
       <Show when={props.node.properties && Object.keys(props.node.properties).length > 0}>
         <span style={{ 
           color: "#4caf50", 
@@ -226,18 +181,12 @@ function KdlNodeView_NodeOff(props: { node: Node , isNodeOff: any}) {
           "font-weight": props.node.values && props.node.values.length > 0 ? "normal" : "bold", // 値がない(見出し等の)場合は少し強調
           "font-size": props.node.values && props.node.values.length > 0 ? "13px" : "15px"
         }}>
+	{/*
+          {Object.entries(props.node.properties).map(([k, v]) => `${k}=${v}`).join(" ")}
+	  */}
 	  {Object.values(props.node.properties).map((v) => String(v)).join(" ")}
         </span>
       </Show>
-      */}
-      <Show when={displayPropertyValues().length > 0}>
-        <span style={textStyle()}>
-          {/* テキストとプロパティ値が両方ある場合は少し隙間を空ける */}
-          <Show when={props.node.values && props.node.values.length > 0}>&nbsp;</Show>
-          {displayPropertyValues().join(" ")}
-        </span>
-      </Show>
-
 
       <Show when={props.node.children && props.node.children.length > 0}>
         <div style={{ "padding-left": "15px", "margin-top": "4px" }}>

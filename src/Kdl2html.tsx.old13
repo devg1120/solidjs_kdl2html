@@ -161,40 +161,31 @@ function KdlNodeView_NodeOff(props: { node: Node , isNodeOff: any}) {
     );
   });
 
-
-// 【機能拡張】KDLプロパティからスタイル設定（背景色を含む）を動的に抽出
+  // 【新規追加】KDLプロパティからスタイル設定を動的に抽出するキャッシュ計算
   const textStyle = createMemo(() => {
     const propsMap = props.node.properties || {};
     
+    // スタイル指定用プロパティを抽出し、指定がない場合はデフォルト値をセット
     const isBold = propsMap.bold === true || String(propsMap.bold) === "true";
     const customColor = String(propsMap.color || "#333");
     const fontSize = String(propsMap.size || "14px");
     const isItalic = propsMap.italic === true || String(propsMap.italic) === "true";
-    
-    // 【新規追加】背景色のプロパティ（bg_color）を取得。未指定なら transparent（透明）
-    const customBgColor = propsMap.bg_color ? String(propsMap.bg_color) : "transparent";
 
     return {
       "font-weight": isBold ? "bold" : "normal",
       "color": customColor,
       "font-size": fontSize,
       "font-style": isItalic ? "italic" : "normal",
-      "background-color": customBgColor,
-      // 背景色が設定されている場合のみ、見栄えを整えるための余白と角丸を追加
-      "padding": customBgColor !== "transparent" ? "2px 6px" : "0px",
-      "border-radius": customBgColor !== "transparent" ? "3px" : "0px",
       "line-height": "1.6"
     };
   });
 
-
-
-  // 【機能拡張】装飾用のスタイルプロパティ（bg_colorを追加）を除外してテキストを抽出
+  // 【新規追加】装飾用のスタイルプロパティ（bold, color, size, italic）を除外した「純粋なテキストプロパティの値」だけを抽出
   const displayPropertyValues = createMemo(() => {
     if (!props.node.properties) return [];
     
     return Object.entries(props.node.properties)
-      .filter(([key]) => !["bold", "color", "size", "italic", "bg_color"].includes(key)) // bg_color もテキスト出力から除外
+      .filter(([key]) => !["bold", "color", "size", "italic"].includes(key)) // スタイル用キーはテキストとして出力しない
       .map(([_, val]) => String(val));
   });
 
