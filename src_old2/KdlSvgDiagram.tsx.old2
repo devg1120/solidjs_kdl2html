@@ -1,0 +1,251 @@
+import { createMemo, For, Show } from "solid-js";
+import type { Node } from "kdljs";
+
+export function KdlSvgDiagram(props: { nodes: Node[] }) {
+  // 1. 各データの抽出
+  const diagramNodes = createMemo(() => props.nodes.filter(n => n.name === "node"));
+  const diagramEdges = createMemo(() => props.nodes.filter(n => n.name === "edge"));
+
+  // 2. 自動トポロジカル配置・グリッド階層アルゴリズムの計算
+  const nodePositions = createMemo(() => {
+    const nodesList = diagramNodes();
+    const edgesList = diagramEdges();
+    
+    // 各ノードのIDと基本情報を収集
+    const nodeMap = new Map<string, { label: string; type: string }>();
+    nodesList.forEach((n, index) => {
+      // KDLの1つ目の値（value[0]）をIDとする。なければプロパティのid、それもなければインデックス
+      const id = n.values && n.values.length > 0 ? String(n.values[0]) : String(n.properties?.id || `n_${index}`);
+      const label = String(n.properties?.label || id);
+      const type = String(n.properties?.type || "rectangle");
+      nodeMap.set(id, { label, type });
+    });
+
+    // 接続グラフの構築 (エッジの追跡)
+    const adjList = new Map<string, string[]>();
+    const inDegree = new Map<string, number>(); // 入次数（自分に向かってくる線の数）
+
+    nodeMap.forEach((_, id) => {
+      adjList.set(id, []);
+      inDegree.set(id, 0);
+    });
+
+    edgesList.forEach(edge => {
+      const from = String(edge.properties?.from || "");
+      const to = String(edge.properties?.to || "");
+      if (nodeMap.has(from) && nodeMap.has(to)) {
+        adjList.get(from)!.push(to);
+        inDegree.set(to, inDegree.get(to)! + 1);
+      }
+    });
+
+    // 幅優先探索 (BFS) 的なアプローチで、各ノードの「階層（深さ / Y軸レイヤー）」を決定する
+    const nodeLayers = new Map<string, number>();
+    const queue: string[] = [];
+
+    // 入次が0（どこからも指されていない＝スタート地点）のノードをレイヤー0にする
+    nodeMap.forEach((_, id) => {
+      if (inDegree.get(id) === 0) {
+        nodeLayers.set(id, 0);
+        queue.push(id);
+      }
+    });
+
+    // スタート地点が孤立・または循環参照等で1つもない場合は、最初のノードを暫定スタートにする
+    if (queue.length === 0 && nodeMap.size > 0) {
+      const firstId = nodeMap.keys().next().value;
+      if (firstId) {
+        nodeLayers.set(firstId, 0);
+        queue.push(firstId);
+      }
+    }
+
+    // 階層の深さを算出
+    while (queue.length > 0) {
+      const current = queue.shift()!;
+      const currentLayer = nodeLayers.get(current) || 0;
+
+      const neighbors = adjList.get(current) || [];
+      for (const neighbor of neighbors) {
+        const existingLayer = nodeLayers.get(neighbor);
+        // より深い経路が見つかった場合はレイヤー（縦位置）を更新
+        if (existingLayer === undefined || existingLayer < currentLayer + 1) {
+          nodeLayers.set(neighbor, currentLayer + 1);
+          queue.push(neighbor);
+        }
+      }
+    }
+
+    // 各レイヤー（行）ごとに、属するノードをグループ分けしてX軸の並び順を決める
+    const layerGroups = new Map<number, string[]>();
+    nodeMap.forEach((_, id) => {
+      // 計算漏れがあれば暫定的にレイヤー0にする安全網
+      const layer = nodeLayers.has(id) ? nodeLayers.get(id)! : 0;
+      if (!layerGroups.has(layer)) {
+        layerGroups.set(layer, []);
+      }
+      layerGroups.get(layer)!.push(id);
+    });
+
+    // 実際の座標 (X, Y) への変換マッピング
+    const positions: Record<string, { x: number; y: number; label: string; type: string }> = {};
+    
+    // レイアウト設定定数
+    const svgWidth = 600;
+    const layerHeight = 100; // レイヤー（行）間の縦幅
+    const startY = 60;       // 最上部の余白
+
+    layerGroups.forEach((nodesInLayer, layerIndex) => {
+      const y = startY + layerIndex * layerHeight;
+      const count = nodesInLayer.length;
+
+      nodesInLayer.forEach((id, nodeIndex) => {
+        // 同一レイヤー内のノードを等間隔で中央寄せ配置するためのX座標計算
+        const x = count > 1 
+          ? (svgWidth / (count + 1)) * (nodeIndex + 1)
+          : svgWidth / 2;
+
+        const info = nodeMap.get(id)!;
+        positions[id] = { x, y, label: info.label, type: info.type };
+      });
+    });
+
+    return positions;
+  });
+
+  // 3. 計算された座標をベースに、矢印（エッジ）のパスを生成
+  const edgePaths = createMemo(() => {
+    const paths: Array<{ d: string; lx: number; ly: number; label: string; color: string }> = [];
+    const positions = nodePositions();
+
+    diagramEdges().forEach((edge) => {
+      const fromId = String(edge.properties?.from || "");
+      const toId = String(edge.properties?.to || "");
+      const label = String(edge.properties?.label || "");
+      const color = String(edge.properties?.color || "#666");
+
+      const fromNode = positions[fromId];
+      const toNode = positions[toId];
+
+      if (fromNode && toNode) {
+        let d = "";
+        let lx = 0;
+        let ly = 0;
+
+        // 【カギ線（直角曲げ）アルゴリズム】
+        // 縦方向にレイヤーが異なる場合、中間にクランク（水平移動）を挟むことで直角にする
+        if (fromNode.y !== toNode.y) {
+          const midY = fromNode.y + (toNode.y - fromNode.y) / 2;
+          d = `M ${fromNode.x} ${fromNode.y} L ${fromNode.x} ${midY} L ${toNode.x} ${midY} L ${toNode.x} ${toNode.y}`;
+          // ラベルの位置は水平移動の線の真ん中付近にする
+          lx = fromNode.x + (toNode.x - fromNode.x) / 2;
+          ly = midY;
+        } else {
+          // 同じレイヤー（真横に繋ぐ）場合は少し迂回するか単純直線
+          d = `M ${fromNode.x} ${fromNode.y} L ${toNode.x} ${toNode.y}`;
+          lx = fromNode.x + (toNode.x - fromNode.x) / 2;
+          ly = fromNode.y;
+        }
+
+        paths.push({ d, lx, ly, label, color });
+      }
+    });
+
+    return paths;
+  });
+
+  // 最大のY座標を追跡してSVGの表示領域（height）を自動調整する
+  const svgHeight = createMemo(() => {
+    const positions = nodePositions();
+    let maxY = 350;
+    Object.values(positions).forEach(pos => {
+      if (pos.y + 80 > maxY) maxY = pos.y + 80;
+    });
+    return maxY;
+  });
+
+  return (
+    <div style={{ background: "#fff", border: "1px solid #ccc", "border-radius": "4px", padding: "10px" }}>
+      {/* 縦に長くなっても潰れないよう、ビューボックス高さを動的にバインド */}
+      <svg viewBox={`0 0 600 ${svgHeight()}`} width="100%" height="100%" style={{ background: "#fafafa" }}>
+        <defs>
+          <marker id="arrow" viewBox="0 0 10 10" refX="28" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+            <path d="M 0 1 L 9 5 L 0 9 z" fill="#666" />
+          </marker>
+        </defs>
+
+        {/* カギ線のレンダリング */}
+        <For each={edgePaths()}>
+          {(path) => (
+            <g>
+              <path
+                d={path.d}
+                fill="none"
+                stroke={path.color}
+                stroke-width="2"
+                marker-end="url(#arrow)"
+                stroke-linejoin="round"
+              />
+              <Show when={path.label}>
+                <rect
+                  x={path.lx - 30}
+                  y={path.ly - 8}
+                  width="60"
+                  height="16"
+                  fill="#fafafa"
+                  rx="3"
+                />
+                <text
+                  x={path.lx}
+                  y={path.ly}
+                  fill="#555"
+                  font-size="10px"
+                  text-anchor="middle"
+                  dominant-baseline="central"
+                >
+                  {path.label}
+                </text>
+              </Show>
+            </g>
+          )}
+        </For>
+
+        {/* 自動階層グリッドに沿ったノード配置 */}
+        <For each={Object.entries(nodePositions())}>
+          {([id, pos]) => (
+            <g transform={`translate(${pos.x}, ${pos.y})`}>
+              <Show
+                when={pos.type === "circle"}
+                fallback={
+                  <rect
+                    x="-55"
+                    y="-20"
+                    width="110"
+                    height="40"
+                    rx="6"
+                    fill="#e1f5fe"
+                    stroke="#0076d6"
+                    stroke-width="2"
+                  />
+                }
+              >
+                <circle r="25" fill="#fbe9e7" stroke="#d84315" stroke-width="2" />
+              </Show>
+
+              <text
+                fill="#333"
+                font-size="11px"
+                font-family="sans-serif"
+                text-anchor="middle"
+                dominant-baseline="central"
+                style={{ "user-select": "none", "font-weight": "bold" }}
+              >
+                {pos.label}
+              </text>
+            </g>
+          )}
+        </For>
+      </svg>
+    </div>
+  );
+}

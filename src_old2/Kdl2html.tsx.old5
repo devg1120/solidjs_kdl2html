@@ -1,0 +1,270 @@
+import { createSignal, createMemo, For, Show, onMount } from "solid-js";
+import { parse } from "kdljs";
+import type { Node } from "kdljs";
+import { Docs } from "./Docs";
+
+// --- テーブル表示用のコンポーネント ---
+function KdlTableView(props: { rows: Node[] }) {
+  // 全ての行から使われているプロパティのキーを重複なく抽出してヘッダーにする
+  const headers = createMemo(() => {
+    const keysSet = new Set<string>();
+    for (const node of props.rows) {
+      if (node.properties) {
+        Object.keys(node.properties).forEach(key => keysSet.add(key));
+      }
+    }
+    return Array.from(keysSet);
+  });
+
+  return (
+    <div style={{ "overflow-x": "auto", margin: "10px 0" }}>
+      <table style={{
+        width: "100%",
+        "border-collapse": "collapse",
+        "font-size": "14px",
+        "text-align": "left",
+        border: "1px solid #ccc"
+      }}>
+        <thead>
+          <tr style={{ "background-color": "#f2f2f2" }}>
+            <th style={{ padding: "8px", border: "1px solid #ddd", "font-weight": "bold" }}>Node</th>
+            <Show when={props.rows.some(r => r.values && r.values.length > 0)}>
+              <th style={{ padding: "8px", border: "1px solid #ddd", "font-weight": "bold" }}>Value</th>
+            </Show>
+            <For each={headers()}>
+              {(header) => (
+                <th style={{ padding: "8px", border: "1px solid #ddd", "font-weight": "bold", color: "#4caf50" }}>
+                  {header}
+                </th>
+              )}
+            </For>
+          </tr>
+        </thead>
+        <tbody>
+          <For each={props.rows}>
+            {(rowNode) => (
+              <tr style={{ "border-bottom": "1px solid #ddd" }}>
+                <td style={{ padding: "8px", border: "1px solid #ddd", color: "#0076d6", "font-weight": "bold" }}>
+                  {rowNode.name}
+                </td>
+                <Show when={props.rows.some(r => r.values && r.values.length > 0)}>
+                  <td style={{ padding: "8px", border: "1px solid #ddd", color: "#d32f2f" }}>
+                    {rowNode.values?.map(v => String(v)).join(", ") || ""}
+                  </td>
+                </Show>
+                <For each={headers()}>
+                  {(header) => {
+                    const val = rowNode.properties?.[header];
+                    return (
+                      <td style={{ padding: "8px", border: "1px solid #ddd" }}>
+                        {val !== undefined ? String(val) : "-"}
+                      </td>
+                    );
+                  }}
+                </For>
+              </tr>
+            )}
+          </For>
+        </tbody>
+      </table>
+    </div>
+  );
+}
+
+// 1. 各ノードを表示する子コンポーネント
+function KdlNodeView(props: { node: Node }) {
+  // 子要素の中に、プロパティ（属性）を持っているノードが1つでもある場合はテーブル化する
+  const shouldRenderTable = createMemo(() => {
+    return props.node.children && props.node.children.some(child => 
+      child.properties && Object.keys(child.properties).length > 0
+    );
+  });
+
+  return (
+    <li style={{ "margin-bottom": "8px" }}>
+      <strong style={{ color: "#0076d6" }}>{props.node.name}</strong>
+
+      <Show when={props.node.values && props.node.values.length > 0}>
+        <span style={{ color: "#d32f2f", "margin-left": "8px" }}>
+          {props.node.values.map((v) => String(v)).join(", ")}
+        </span>
+      </Show>
+
+      <Show when={props.node.properties && Object.keys(props.node.properties).length > 0}>
+        <span style={{ color: "#4caf50", "margin-left": "8px", "font-style": "italic" }}>
+          {Object.entries(props.node.properties).map(([k, v]) => `${k}=${v}`).join(" ")}
+        </span>
+      </Show>
+
+      <Show when={props.node.children && props.node.children.length > 0}>
+        <div style={{ "padding-left": "20px", "margin-top": "4px" }}>
+          <Show 
+            when={shouldRenderTable()} 
+            fallback={
+              <ul style={{ "list-style-type": "circle", "padding-left": "0" }}>
+                <For each={props.node.children}>
+                  {(childNode) => <KdlNodeView node={childNode} />}
+                </For>
+              </ul>
+            }
+          >
+            <KdlTableView rows={props.node.children!} />
+          </Show>
+        </div>
+      </Show>
+    </li>
+  );
+}
+
+// 2. メインコンポーネント
+export default function KdlToHtmlApp() {
+  const [selectedValue, setSelectedValue] = createSignal(0);
+  const options = [];
+
+  for (let i = 0; i < Docs.length; i++) {
+    options.push({
+      value: i,
+      label: Docs[i].title,
+    });
+  }
+
+  const [kdlInput, setKdlInput] = createSignal(Docs[selectedValue()].code);
+
+  onMount(() => {
+    document.body.style.margin = "0";
+    document.body.style.padding = "0";
+    document.body.style.overflow = "hidden";
+  });
+
+  const [leftWidth, setLeftWidth] = createSignal(50);
+  let containerRef: HTMLDivElement | undefined;
+
+  const handleMouseDown = (e: MouseEvent) => {
+    e.preventDefault();
+    const handleMouseMove = (moveEvent: MouseEvent) => {
+      if (!containerRef) return;
+      const rect = containerRef.getBoundingClientRect();
+      const newWidth = ((moveEvent.clientX - rect.left) / rect.width) * 100;
+      setLeftWidth(Math.max(10, Math.min(90, newWidth)));
+    };
+    const handleMouseUp = () => {
+      window.removeEventListener("mousemove", handleMouseMove);
+      window.removeEventListener("mouseup", handleMouseUp);
+    };
+    window.addEventListener("mousemove", handleMouseMove);
+    window.addEventListener("mouseup", handleMouseUp);
+  };
+
+  const rawParseResult = createMemo(() => {
+    try {
+      return parse(kdlInput());
+    } catch (e: any) {
+      return { debug_error: e.message || String(e) };
+    }
+  });
+
+  // kdljsの仕様バージョンによる構造差異を完全に吸収する抽出処理
+  const parsedNodes = createMemo<Node[]>(() => {
+    const result = rawParseResult();
+    if (!result || "debug_error" in result) return [];
+
+    if (Array.isArray(result)) return result;
+
+    if (typeof result === "object") {
+      if ("output" in result && result.output && typeof result.output === "object" && "nodes" in result.output) {
+        return (result.output as any).nodes || [];
+      }
+      if ("nodes" in result) {
+        return (result as any).nodes || [];
+      }
+      if ("output" in result && Array.isArray(result.output)) {
+        return result.output;
+      }
+    }
+    return [];
+  });
+
+  // 最上位ルート階層でも、プロパティを持つノードが1つでもあれば全体をテーブル化する
+  const isRootTable = createMemo(() => {
+    const nodes = parsedNodes();
+    return nodes.length > 0 && nodes.every(node => 
+      node.properties && Object.keys(node.properties).length > 0
+    );
+  });
+
+  return (
+    <div style={{ border: "solid red 1px", padding: "10px", "font-family": "sans-serif", height: "100vh", "box-sizing": "border-box", display: "flex", "flex-direction": "column" }}>
+      <h3 style={{ margin: "0 0 10px 0" }}>SolidJS + kdljs 動作確認ボード</h3>
+
+      <div style={{ "margin-bottom": "10px" }}>
+        <select
+          style={{ padding: "8px 20px", "background-color": "#f1f1f1", "font-size": "20px", color: "blue" }}
+          value={selectedValue()}
+          onChange={(e) => {
+            setSelectedValue(Number(e.currentTarget.value));
+            setKdlInput(Docs[Number(e.currentTarget.value)].code);
+          }}
+        >
+          <For each={options}>
+            {(item) => <option value={item.value}>{item.label}</option>}
+          </For>
+        </select>
+      </div>
+
+      <div ref={containerRef} style={{ display: "flex", flex: 1, minHeight: 0, width: "100%", "user-select": "none" }}>
+        <div style={{ width: `${leftWidth()}%`, "box-sizing": "border-box", display: "flex", "flex-direction": "column" }}>
+          <h3 style={{ margin: "0 0 5px 0" }}>KDL 入力</h3>
+          <textarea
+            value={kdlInput()}
+            onInput={(e) => setKdlInput(e.currentTarget.value)}
+            style={{ width: "100%", flex: 1, "font-family": "monospace", "font-size": "14px", "line-height": "1.5", padding: "12px", "box-sizing": "border-box", resize: "none" }}
+          />
+        </div>
+
+        <div
+          onMouseDown={handleMouseDown}
+          style={{ width: "4px", cursor: "col-resize", "background-color": "#ccc", margin: "0 10px", "border-radius": "4px", transition: "background-color 0.2s", height: "100%" }}
+          onMouseEnter={(e) => e.currentTarget.style.backgroundColor = "#999"}
+          onMouseLeave={(e) => e.currentTarget.style.backgroundColor = "#ccc"}
+        />
+
+        <div style={{ width: `${100 - leftWidth()}%`, "box-sizing": "border-box", display: "flex", "flex-direction": "column" }}>
+          <h3 style={{ margin: "0 0 5px 0" }}>変換されたHTML DOM / TABLE</h3>
+
+          <div style={{ flex: 1, overflow: "auto", border: "solid 1px #000000", padding: "10px" }}>
+            <Show
+              when={parsedNodes().length > 0}
+              fallback={
+                <div style={{ color: "#666" }}>
+                  <p>⚠️ 表示できる有効なノードがありません。</p>
+                </div>
+              }
+            >
+              <Show 
+                when={isRootTable()} 
+                fallback={
+                  <ul style={{ margin: 0, padding: 0, "list-style-type": "square", "padding-left": "20px" }}>
+                    <For each={parsedNodes()}>
+                      {(node) => <KdlNodeView node={node} />}
+                    </For>
+                  </ul>
+                }
+              >
+                <KdlTableView rows={parsedNodes()} />
+              </Show>
+            </Show>
+
+            {/* 現在のパース構造データ（デバッグ用） */}
+            <div style={{ "margin-top": "20px", "border-top": "2px dashed #ccc", padding: "10px 0" }}>
+              <p style={{ margin: "0 0 5px 0", "font-size": "12px", color: "#666", "font-weight": "bold" }}>⬇️ 現在のパース構造データ（デバッグ用）</p>
+              <pre style={{ background: "#f9f9f9", padding: "8px", "font-size": "11px", border: "1px solid #eee" }}>
+                {JSON.stringify(rawParseResult(), null, 2)}
+              </pre>
+            </div>
+
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
