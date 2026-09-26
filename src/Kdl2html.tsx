@@ -152,8 +152,78 @@ function KdlTableView(props: { rows: Node[] }) {
   );
 }
 
+function KdlTableView_Raw(props: { rows: Node[] }) {
+  const headers = createMemo(() => {
+    const keysSet = new Set<string>();
+    for (const node of props.rows) {
+      if (node.properties) {
+        Object.keys(node.properties).forEach(key => keysSet.add(key));
+      }
+    }
+    return Array.from(keysSet);
+  });
+
+  return (
+    <div style={{ "overflow-x": "auto", margin: "10px 0" }}>
+      <table style={{
+        width: "100%",
+        "border-collapse": "collapse",
+        "font-size": "14px",
+        "text-align": "left",
+        border: "1px solid #ccc"
+      }}>
+        <thead>
+          <tr style={{ "background-color": "#f2f2f2" }}>
+	  
+              <th style={{ padding: "8px", border: "1px solid #ddd", "font-weight": "bold" }}>Node</th>
+	      
+            <Show when={props.rows.some(r => r.values && r.values.length > 0)}>
+              <th style={{ padding: "8px", border: "1px solid #ddd", "font-weight": "bold" }}>Value</th>
+            </Show>
+            <For each={headers()}>
+              {(header) => (
+                <th style={{ padding: "8px", border: "1px solid #ddd", "font-weight": "bold", color: "#4caf50" }}>
+                  {header}
+                </th>
+              )}
+            </For>
+          </tr>
+        </thead>
+        <tbody>
+          <For each={props.rows}>
+            {(rowNode) => (
+              <tr style={{ "border-bottom": "1px solid #ddd" }}>
+	      
+                  <td style={{ padding: "8px", border: "1px solid #ddd", color: "#0076d6", "font-weight": "bold" }}>
+                    {rowNode.name}
+                  </td>
+	      
+                <Show when={props.rows.some(r => r.values && r.values.length > 0)}>
+                  <td style={{ padding: "8px", border: "1px solid #ddd", color: "#d32f2f" }}>
+                    {rowNode.values?.map(v => String(v)).join(", ") || ""}
+                  </td>
+                </Show>
+                <For each={headers()}>
+                  {(header) => {
+                    const val = rowNode.properties?.[header];
+                    return (
+                      <td style={{ padding: "8px", border: "1px solid #ddd" }}>
+                        {val !== undefined ? String(val) : "-"}
+                      </td>
+                    );
+                  }}
+                </For>
+              </tr>
+            )}
+          </For>
+        </tbody>
+      </table>
+    </div>
+  );
+}
+
 // --- 各ノードを表示する子コンポーネント（ノード名非表示版） ---
-function KdlNodeView_NodeOff(props: { node: Node , isNodeOff: any}) {
+function KdlNodeView(props: { node: Node , isShowRaw: any}) {
   // 子要素があり、かつそれらすべてがプロパティを持っていて「さらにその下がネストしていない」場合のみ部分テーブル化
   const shouldRenderTable = createMemo(() => {
     return props.node.children && props.node.children.length > 0 && props.node.children.every(child => 
@@ -246,7 +316,7 @@ function KdlNodeView_NodeOff(props: { node: Node , isNodeOff: any}) {
             fallback={
               <ul style={{ "list-style-type": "none", "padding-left": "0" }}>
                 <For each={props.node.children}>
-                  {(childNode) => <KdlNodeView_NodeOff node={childNode} isNodeOff={props.isNodeOff}/>}
+                  {(childNode) => <KdlNodeView node={childNode} isShowRaw={props.isShowRaw}/>}
 
                 </For>
               </ul>
@@ -261,7 +331,7 @@ function KdlNodeView_NodeOff(props: { node: Node , isNodeOff: any}) {
 }
 
 // --- 各ノードを表示する子コンポーネント ---
-function KdlNodeView(props: { node: Node }) {
+function KdlNodeView_Raw(props: { node: Node }) {
   // 子要素があり、かつそれらすべてがプロパティを持っていて「さらにその下がネストしていない」場合のみ部分テーブル化
   const shouldRenderTable = createMemo(() => {
     return props.node.children && props.node.children.length > 0 && props.node.children.every(child => 
@@ -292,12 +362,12 @@ function KdlNodeView(props: { node: Node }) {
             fallback={
               <ul style={{ "list-style-type": "none", "padding-left": "0" }}>
                 <For each={props.node.children}>
-                  {(childNode) => <KdlNodeView node={childNode} />}
+                  {(childNode) => <KdlNodeView_Raw node={childNode} />}
                 </For>
               </ul>
             }
           >
-            <KdlTableView rows={props.node.children!} />
+            <KdlTableView_Raw rows={props.node.children!} />
           </Show>
         </div>
       </Show>
@@ -311,8 +381,8 @@ export default function KdlToHtmlApp() {
   const [isDebug, setIsDebug] = createSignal(false);
   const toggle_debug = () => setIsDebug(!isDebug());
 
-  const [isNodeOff, setIsNodeOff] = createSignal(true);
-  const toggle_NodeOff = () => setIsNodeOff(!isNodeOff());
+  const [isShowRaw, setIsShowRaw] = createSignal(true);
+  const toggle_ShowRaw = () => setIsShowRaw(!isShowRaw());
 
   const options = [];
 
@@ -455,10 +525,10 @@ export default function KdlToHtmlApp() {
           {isDebug() ? "Debug" : "no Debug"}
         </button>
         <button
-          onClick={toggle_NodeOff}
+          onClick={toggle_ShowRaw}
           style={{
-            "background-color": !isNodeOff() ? "gray" : "#ffffff",
-            "color": !isNodeOff() ? "#ffffff" : "gray",
+            "background-color": !isShowRaw() ? "gray" : "#ffffff",
+            "color": !isShowRaw() ? "#ffffff" : "gray",
             margin : "0px 0px 0px 30px",
             padding: "6px 20px",
             border: "none",
@@ -468,7 +538,7 @@ export default function KdlToHtmlApp() {
             transition: "background-color 0.3s"
           }}
         >
-          {isNodeOff() ? "Node hidden" : "Node show"}
+          {!isShowRaw() ? "Raw" : "Not Raw"}
         </button>
       </div>
 
@@ -524,17 +594,26 @@ export default function KdlToHtmlApp() {
                     fallback={
                       <ul style={{ margin: 0, padding: 0, "list-style-type": "none", "padding-left": "0px" }}>
 		        <Switch>
-			   <Match when={isNodeOff()}>
-                               <For each={parsedNodes()}>{(node) => <KdlNodeView_NodeOff node={node} />}</For>
-                           </Match>
-			   <Match when={!isNodeOff()}>
+			   <Match when={isShowRaw()}>
                                <For each={parsedNodes()}>{(node) => <KdlNodeView node={node} />}</For>
+                           </Match>
+			   <Match when={!isShowRaw()}>
+                               <For each={parsedNodes()}>{(node) => <KdlNodeView_Raw node={node} />}</For>
 			   </Match>
 		        </Switch>
                       </ul>
                     }
                   >
-                    <KdlTableView rows={parsedNodes()} />
+		        <Switch>
+			   <Match when={isShowRaw()}>
+                               <KdlTableView rows={parsedNodes()} />
+                           </Match>
+			   <Match when={!isShowRaw()}>
+                               <KdlTableView_Raw rows={parsedNodes()} />
+			   </Match>
+		        </Switch>
+
+
                   </Show>
                 }
               >
