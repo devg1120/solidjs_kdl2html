@@ -104,9 +104,7 @@ function KdlTableView(props: { rows: Node[] }) {
       }}>
         <thead>
           <tr style={{ "background-color": "#f2f2f2" }}>
-	  {/*
-              <th style={{ padding: "8px", border: "1px solid #ddd", "font-weight": "bold" }}>Node</th>
-	      */}
+            <th style={{ padding: "8px", border: "1px solid #ddd", "font-weight": "bold" }}>Node</th>
             <Show when={props.rows.some(r => r.values && r.values.length > 0)}>
               <th style={{ padding: "8px", border: "1px solid #ddd", "font-weight": "bold" }}>Value</th>
             </Show>
@@ -123,11 +121,9 @@ function KdlTableView(props: { rows: Node[] }) {
           <For each={props.rows}>
             {(rowNode) => (
               <tr style={{ "border-bottom": "1px solid #ddd" }}>
-	      {/*
-                  <td style={{ padding: "8px", border: "1px solid #ddd", color: "#0076d6", "font-weight": "bold" }}>
-                    {rowNode.name}
-                  </td>
-	      */}
+                <td style={{ padding: "8px", border: "1px solid #ddd", color: "#0076d6", "font-weight": "bold" }}>
+                  {rowNode.name}
+                </td>
                 <Show when={props.rows.some(r => r.values && r.values.length > 0)}>
                   <td style={{ padding: "8px", border: "1px solid #ddd", color: "#d32f2f" }}>
                     {rowNode.values?.map(v => String(v)).join(", ") || ""}
@@ -153,7 +149,7 @@ function KdlTableView(props: { rows: Node[] }) {
 }
 
 // --- 各ノードを表示する子コンポーネント（ノード名非表示版） ---
-function KdlNodeView_NodeOff(props: { node: Node , isNodeOff: any}) {
+function KdlNodeView_NodeOff(props: { node: Node }) {
   // 子要素があり、かつそれらすべてがプロパティを持っていて「さらにその下がネストしていない」場合のみ部分テーブル化
   const shouldRenderTable = createMemo(() => {
     return props.node.children && props.node.children.length > 0 && props.node.children.every(child => 
@@ -181,10 +177,7 @@ function KdlNodeView_NodeOff(props: { node: Node , isNodeOff: any}) {
           "font-weight": props.node.values && props.node.values.length > 0 ? "normal" : "bold", // 値がない(見出し等の)場合は少し強調
           "font-size": props.node.values && props.node.values.length > 0 ? "13px" : "15px"
         }}>
-	{/*
           {Object.entries(props.node.properties).map(([k, v]) => `${k}=${v}`).join(" ")}
-	  */}
-	  {Object.values(props.node.properties).map((v) => String(v)).join(" ")}
         </span>
       </Show>
 
@@ -195,8 +188,7 @@ function KdlNodeView_NodeOff(props: { node: Node , isNodeOff: any}) {
             fallback={
               <ul style={{ "list-style-type": "none", "padding-left": "0" }}>
                 <For each={props.node.children}>
-                  {(childNode) => <KdlNodeView_NodeOff node={childNode} isNodeOff={props.isNodeOff}/>}
-
+                  {(childNode) => <KdlNodeView_NodeOff node={childNode} />}
                 </For>
               </ul>
             }
