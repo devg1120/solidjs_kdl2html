@@ -158,7 +158,7 @@ function KdlNodeView(props: { node: Node }) {
   });
 
   return (
-    <li style={{ "margin-bottom": "8px", "list-style-type": "none", "margin-left": "10px" }}>
+    <li style={{ "margin-bottom": "8px", "list-style-type": "square", "margin-left": "20px" }}>
       <strong style={{ color: "#0076d6" }}>{props.node.name}</strong>
 
       <Show when={props.node.values && props.node.values.length > 0}>
@@ -174,7 +174,7 @@ function KdlNodeView(props: { node: Node }) {
       </Show>
 
       <Show when={props.node.children && props.node.children.length > 0}>
-        <div style={{ "padding-left": "15px", "margin-top": "4px" }}>
+        <div style={{ "padding-left": "20px", "margin-top": "4px" }}>
           <Show 
             when={shouldRenderTable()} 
             fallback={
