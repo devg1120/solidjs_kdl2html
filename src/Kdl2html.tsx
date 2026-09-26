@@ -260,7 +260,7 @@ export default function KdlToHtmlApp() {
   const [isDebug, setIsDebug] = createSignal(false);
   const toggle_debug = () => setIsDebug(!isDebug());
 
-  const [isNodeOff, setIsNodeOff] = createSignal(false);
+  const [isNodeOff, setIsNodeOff] = createSignal(true);
   const toggle_NodeOff = () => setIsNodeOff(!isNodeOff());
 
   const options = [];
@@ -406,8 +406,8 @@ export default function KdlToHtmlApp() {
         <button
           onClick={toggle_NodeOff}
           style={{
-            "background-color": isNodeOff() ? "gray" : "#ffffff",
-            "color": isNodeOff() ? "#ffffff" : "gray",
+            "background-color": !isNodeOff() ? "gray" : "#ffffff",
+            "color": !isNodeOff() ? "#ffffff" : "gray",
             margin : "0px 0px 0px 30px",
             padding: "6px 20px",
             border: "none",
