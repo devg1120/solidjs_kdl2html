@@ -216,47 +216,41 @@ export function KdlTableView_Raw(props: { rows: Node[] }) {
 
 // --- 各ノードを表示する子コンポーネント（ノード名非表示版） ---
 export function KdlNodeView(props: { node: Node; isShowRaw: any }) {
-  
-  // 【機能拡張】ノード名が "grid" の処理をアップデート
+
+  // 【新規追加】ノード名が "grid" の場合は、子要素をCSS Gridでマルチカラム配置する
   if (props.node.name === "grid" && props.node.children) {
+    // 列数プロパティを取得。未指定ならデフォルトで2列
     const cols = () => Number(props.node.properties?.cols) || 2;
+    // 隙間（ギャップ）プロパティを取得。未指定ならデフォルトで10px
     const gap = () => String(props.node.properties?.gap || "10px");
 
     return (
       <div 
         style={{
           display: "grid",
+          // 指定された列数に応じて、均等な幅（1fr）のカラムを動的に生成する
           "grid-template-columns": `repeat(${cols()}, minmax(0, 1fr))`,
           gap: gap(),
           margin: "16px 0",
           width: "100%",
-          "max-width": "100%",
+          "max-width": "100%", // コンテナの幅いっぱいに広げる
           "box-sizing": "border-box"
         }}
       >
+        {/*
+          Gridの直下には各子要素が個別に配置されます。
+          KdlNodeViewにそのまま子要素を1つずつ流し込みます。
+        */}
         <For each={props.node.children}>
-          {(childNode) => {
-            // 【新規追加】子ノードのプロパティから span を取得。指定がなければ 1
-            const childSpan = () => Number(childNode.properties?.span) || 1;
-
-            return (
-              <div 
-                style={{ 
-                  "min-width": 0, 
-                  "box-sizing": "border-box",
-                  // 【新規追加】指定された数値マス分、グリッドの横幅を結合して広げるスタイル
-                  "grid-column": `span ${childSpan()}` 
-                }}
-              >
-                <KdlNodeView node={childNode} isShowRaw={props.isShowRaw} />
-              </div>
-            );
-          }}
+          {(childNode) => (
+            <div style={{ "min-width": 0, "box-sizing": "border-box" }}>
+              <KdlNodeView node={childNode} isShowRaw={props.isShowRaw} />
+            </div>
+          )}
         </For>
       </div>
     );
   }
-
 
   if (props.node.name === "tabs" && props.node.children) {
     // 有効な "tab" 子ノードだけを抽出
