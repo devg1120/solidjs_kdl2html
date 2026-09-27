@@ -9,6 +9,9 @@ import Doc_08 from "./docs/doc_08";
 import Doc_09 from "./docs/doc_09";
 import Doc_10 from "./docs/doc_10";
 import Doc_11 from "./docs/doc_11";
+import Doc_12 from "./docs/doc_12";
+
+export const FP = 11;
 
 export const Docs = [
   Doc_01,
@@ -22,4 +25,5 @@ export const Docs = [
   Doc_09,
   Doc_10,
   Doc_11,
+  Doc_12,
 ];

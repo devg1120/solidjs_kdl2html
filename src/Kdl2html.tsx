@@ -2,6 +2,7 @@ import { createSignal, createMemo, For, Show, onMount } from "solid-js";
 import { parse } from "kdljs";
 import type { Node } from "kdljs";
 import { Docs } from "./Docs";
+import { FP } from "./Docs";
 
 import { KdlEditor } from "./KdlEditor";
 
@@ -14,7 +15,7 @@ import { KdlSvgDiagram } from "./KdlSvgDiagram";
 
 // 2. メインコンポーネント
 export default function KdlToHtmlApp() {
-  const [selectedValue, setSelectedValue] = createSignal(10);
+  const [selectedValue, setSelectedValue] = createSignal(FP);
 
   const [isDebug, setIsDebug] = createSignal(false);
   const toggle_debug = () => setIsDebug(!isDebug());

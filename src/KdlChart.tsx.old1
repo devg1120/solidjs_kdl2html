@@ -1,0 +1,115 @@
+import { createMemo, For } from "solid-js";
+import type { Node } from "kdljs";
+
+export function KdlChart(props: { node: Node }) {
+  // 1. 子要素から "data" ノードを抽出
+  const chartData = createMemo(() => {
+    if (!props.node.children) return [];
+    return props.node.children
+      .filter((n) => n.name === "data" && n.values && n.values.length >= 2)
+      .map((n) => ({
+        label: String(n.values![0]),
+        value: Number(n.values![1]) || 0,
+      }));
+  });
+
+  // 2. グラフ全体のタイトルと設定（色のデフォルトは綺麗なブルー）
+  const chartTitle = () => String(props.node.values?.[0] || "簡易グラフ");
+  const barColor = () => String(props.node.properties?.color || "#0076d6");
+
+  // 3. スケーリングのための最大値計算
+  const maxValue = createMemo(() => {
+    const data = chartData();
+    if (data.length === 0) return 1;
+    const max = Math.max(...data.map((d) => d.value));
+    return max <= 0 ? 1 : max;
+  });
+
+  // SVGキャンバスの基本サイズ定義
+  const width = 500;
+  const rowHeight = 35;
+  const paddingLeft = 90; // ラベル用の左マージン
+  const paddingRight = 40; // 数値用の右マージン
+  const chartWidth = width - paddingLeft - paddingRight;
+  
+  const height = createMemo(() => chartData().length * rowHeight + 40);
+
+  return (
+    <div
+      style={{
+        background: "#fff",
+        border: "1px solid #e0e0e0",
+        "border-radius": "6px",
+        padding: "16px",
+        margin: "12px 0",
+        "box-shadow": "0 2px 4px rgba(0,0,0,0.02)",
+        "max-width": "550px"
+      }}
+    >
+      {/* グラフタイトル */}
+      <h4 style={{ margin: "0 0 12px 0", color: "#333", "font-size": "15px", "border-left": `4px solid ${barColor()}`, "padding-left": "8px" }}>
+        {chartTitle()}
+      </h4>
+
+      <Show when={chartData().length > 0} fallback={<p style={{ color: "#999", "font-size": "13px" }}>データがありません。</p>}>
+        <svg viewBox={`0 0 ${width} ${height()}`} width="100%" height="100%">
+          {/* 背景のグリッド線（薄い縦線） */}
+          <g stroke="#f0f0f0" stroke-width="1">
+            <line x1={paddingLeft} y1={10} x2={paddingLeft} y2={height() - 25} />
+            <line x1={paddingLeft + chartWidth * 0.5} y1={10} x2={paddingLeft + chartWidth * 0.5} y2={height() - 25} stroke-dasharray="3,3" />
+            <line x1={paddingLeft + chartWidth} y1={10} x2={paddingLeft + chartWidth} y2={height() - 25} />
+          </g>
+
+          {/* 各データバーのレンダリング */}
+          <For each={chartData()}>
+            {(item, index) => {
+              const y = createMemo(() => index() * rowHeight + 15);
+              // 最大値に対する割合から横幅を計算
+              const barWidth = createMemo(() => (item.value / maxValue()) * chartWidth);
+
+              return (
+                <g>
+                  {/* Y軸ラベル（項目名） */}
+                  <text
+                    x={paddingLeft - 10}
+                    y={y() + 12}
+                    fill="#666"
+                    font-size="12px"
+                    text-anchor="end"
+                    dominant-baseline="central"
+                  >
+                    {item.label}
+                  </text>
+
+                  {/* 棒グラフ（アニメーション付き風角丸バー） */}
+                  <rect
+                    x={paddingLeft}
+                    y={y()}
+                    width={barWidth()}
+                    height="20"
+                    rx="4"
+                    fill={barColor()}
+                    style={{ transition: "width 0.3s ease" }}
+                  />
+
+                  {/* データ数値 */}
+                  <text
+                    x={paddingLeft + barWidth() + 8}
+                    y={y() + 12}
+                    fill="#333"
+                    font-size="12px"
+                    font-weight="bold"
+                    dominant-baseline="central"
+                  >
+                    {item.value}
+                  </text>
+                </g>
+              );
+            }}
+          </For>
+        </svg>
+      </Show>
+    </div>
+  );
+}
+

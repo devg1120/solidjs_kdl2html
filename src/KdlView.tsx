@@ -4,6 +4,7 @@ import type { Node } from "kdljs";
 import { Docs } from "./Docs";
 
 import { KdlSvgDiagram } from "./KdlSvgDiagram";
+import { KdlChart } from "./KdlChart"
 
 // --- テーブル表示用のコンポーネント ---
 export function KdlTableView(props: { rows: Node[] }) {
@@ -215,6 +216,12 @@ export function KdlTableView_Raw(props: { rows: Node[] }) {
 
 // --- 各ノードを表示する子コンポーネント（ノード名非表示版） ---
 export function KdlNodeView(props: { node: Node; isShowRaw: any }) {
+
+  // 【新規追加】ノード名が "chart" の場合は、グラフコンポーネントを即座にリターン
+  if (props.node.name === "chart") {
+    return <KdlChart node={props.node} />;
+  }
+
   // 【新規追加】自身のノード名が "svg" の場合は、自身の子要素（nodes）をダイアグラムに渡して描画する
   if (props.node.name === "svg" && props.node.children) {
     return (
