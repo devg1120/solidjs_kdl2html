@@ -8,7 +8,6 @@ import Doc_07 from "./docs/doc_07";
 import Doc_08 from "./docs/doc_08";
 import Doc_09 from "./docs/doc_09";
 import Doc_10 from "./docs/doc_10";
-import Doc_11 from "./docs/doc_11";
 
 export const Docs = [
   Doc_01,
@@ -21,5 +20,4 @@ export const Docs = [
   Doc_08,
   Doc_09,
   Doc_10,
-  Doc_11,
 ];

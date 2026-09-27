@@ -161,10 +161,39 @@ export default function KdlToHtmlApp() {
       )
     );
   });
-
+/*
   const isDiagramData = createMemo(() => {
     const nodes = parsedNodes();
     return nodes.some((n) => n.name === "node" || n.name === "edge");
+  });
+*/
+  // 1. isDiagramData の判定を修正 (ルート直下、または svg ノードの子要素に node/edge があるか)
+  const isDiagramData = createMemo(() => {
+    const nodes = parsedNodes();
+    // ルート直下に node/edge があるか
+    const hasDirectDiagram = nodes.some((n) => n.name === "node" || n.name === "edge");
+    if (hasDirectDiagram) return true;
+
+    // もしルートに 'svg' ノードがあれば、その子要素もチェックする
+    const svgNode = nodes.find((n) => n.name === "svg");
+    if (svgNode && svgNode.children) {
+      return svgNode.children.some((n) => n.name === "node" || n.name === "edge" || n.name === "diagram");
+    }
+
+    return false;
+  });
+
+  // 2. KdlSvgDiagram に渡すノード配列を調整する用のメモを定義
+  const diagramTargetNodes = createMemo<Node[]>(() => {
+    const nodes = parsedNodes();
+    const svgNode = nodes.find((n) => n.name === "svg");
+    
+    // svg { ... } で囲まれている場合は、その中の children をフラットにして渡す
+    // ついでに orientation 設定を持つ "diagram" ノードの情報等も一緒に引き渡す
+    if (svgNode && svgNode.children) {
+      return svgNode.children;
+    }
+    return nodes;
   });
 
   return (
@@ -392,7 +421,11 @@ export default function KdlToHtmlApp() {
                   </Show>
                 }
               >
-                <KdlSvgDiagram nodes={parsedNodes()} />
+{/* 修正前: <KdlSvgDiagram nodes={parsedNodes()} /> */}
+{/* 修正後: */}
+<KdlSvgDiagram nodes={diagramTargetNodes()} />
+
+
               </Show>
             </Show>
 

@@ -1,7 +1,6 @@
 const Docs = {
   title: "SVG 3",
   code: `
-  svg {
 diagram orientation="horizontal"
 
 node "input"   label="データ入力"  type="circle"    color="#e8f5e9" stroke="#2e7d32" text_color="#1b5e20"
@@ -12,7 +11,7 @@ node "alert"   label="エラー通知"  type="circle"    color="#ffebee" stroke=
 edge from="input"   to="process" label="送信"     color="#2e7d32"
 edge from="process" to="success" label="正常(200)" color="#1565c0"
 edge from="process" to="alert"   label="異常"      color="#c62828" dashed="true"
-}
+
 
 `,
 };

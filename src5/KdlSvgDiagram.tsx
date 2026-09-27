@@ -233,9 +233,9 @@ export function KdlSvgDiagram(props: { nodes: Node[] }) {
     <div
       style={{
         background: "#fff",
-        //border: "1px solid #ccc",
-        //"border-radius": "4px",
-        //padding: "10px",
+        border: "1px solid #ccc",
+        "border-radius": "4px",
+        padding: "10px",
       }}
     >
       <svg
@@ -243,7 +243,6 @@ export function KdlSvgDiagram(props: { nodes: Node[] }) {
         width="100%"
         height="100%"
         style={{ background: "#fafafa" }}
-        //style={{ background: "#ffffff" }}
       >
         <defs>
           <marker

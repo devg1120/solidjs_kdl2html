@@ -7,7 +7,7 @@
     "dev": "vite --host --port 3000",
     "build": "tsc -b && vite build",
     "preview": "vite preview",
-    "fmt": "prettier --write **/*.{js,ts,jsx,tsx}"
+    "fmt": "prettier --write *src/*.{js,ts,jsx,tsx}"
   },
   "dependencies": {
     "kdljs": "^0.3.0",
