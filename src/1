@@ -234,29 +234,12 @@ export function KdlNodeView(props: { node: Node; isShowRaw: any }) {
 
   if (props.node.name === "line" && props.node.children) {
     let size = "1";
-    let color = "lightgray"
-    //let color = "#FF0000"
+    let color = "red"
     if (props.node.values.length > 0) {
-      size = props.node.values[0] ;
+      size = props.node.values[0] + "px";
     }
-    if (props.node.values.length > 1) {
-      color = props.node.values[1] ;
-    }
-    return <div style={{"border-top": `${size}px solid  ${color}`, "margin-top": "10px" }}></div>;
-    //return <div style={{"border-top": `${size}px solid  #FF0000`, "margin-top": "10px" }}></div>;
+    return <div style={{"border-top": `${size}px solid  ${color}` }}></div>;
 
-  }
-
-  if (props.node.name === "center-title" && props.node.children) {
-    let title = "---";
-    if (props.node.values.length > 0) {
-      title = props.node.values[0] ;
-    }
-    return <div style={{ "margin-top": "10px", "text-align": "center", 
-                "font-size": "14px" , 
-		"font-weight": "bold",
-		"color": "#0080FF"
-		}}>{title}</div>;
   }
   // 子要素があり、かつそれらすべてがプロパティを持っていて「さらにその下がネストしていない」場合のみ部分テーブル化
   const shouldRenderTable = createMemo(() => {

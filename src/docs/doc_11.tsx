@@ -4,14 +4,19 @@ const Docs = {
 document {
     title "SolidJSのスタイル機能" bold="true" size="20px" color="#0076d6"
     
+    line 2 "#0080FF"
+    //line 2  red
+    gap 40
+
     paragraph "これは通常のテキストです。"
     paragraph "ここを赤くて太い大きな文字に変更します。" color="red" bold="true" size="16px"
     paragraph "斜体（イタリック）の指定も組み合わせることができます。" italic="true" color="#4caf50"
     paragraph "ここを黄色の背景色の警告テキストにします。" bg_color="#fff9c4" color="#b71c1c" bold="true"
     paragraph "薄いグレーの背景でコード風の装飾を施すことも可能です。" bg_color="#f5f5f5" size="13px"
 
+ gap
 
-
+  center-title  テスト表のタイトル
   table {
      row rank=1 product="スマートフォン" price=98000 category="ガジェット" sales=1200
      row rank=2 product="ワイヤレスイヤホン" price=15000 category="オーディオ" sales=3500
@@ -19,7 +24,9 @@ document {
      row rank=4 product="4Kモニター" price=45000 category="PC周辺機器" sales=400
   }
 
+ gap
 
+  center-title  SVGのタイトル
   svg {
       diagram orientation="horizontal"
       
