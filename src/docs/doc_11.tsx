@@ -16,6 +16,14 @@ document {
 
  gap
 
+     // 値を引数ごとに別々のクォーテーションで囲んで複数渡します。
+    // colors や bgs にカンマ区切りで順番にスタイルを指定します。
+    paragraph "SolidJS" "と" "kdljs" "の" "強力な" "コンビネーション" colors="#0076d6,#333,#4caf50,#333,orange,purple" bgs="none,none,#e8f5e9,none,none,#f3e5f5" bolds="true,false,true,false,false,true"
+    
+    paragraph "重要キーワード" "は" "背景を黄色" "にします。" bgs="#ffeb3b,none,#fff3cd,none" colors="red,none,black,none"
+
+gap
+
   center-title  テスト表のタイトル
   table {
      row rank=1 product="スマートフォン" price=98000 category="ガジェット" sales=1200

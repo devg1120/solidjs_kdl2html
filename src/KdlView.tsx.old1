@@ -300,57 +300,6 @@ export function KdlNodeView(props: { node: Node; isShowRaw: any }) {
     };
   });
 
-
-// 【機能拡張】各インデックス（Word単位）のスタイルを動的に動出する関数
-  const getWordStyle = (index: number) => {
-    const propsMap = props.node.properties || {};
-
-    // カンマ区切りの文字列を配列に変換する汎用ヘルパー
-    const getPropList = (key: string): string[] => {
-      const val = propsMap[key];
-      if (!val) return [];
-      return String(val).split(",").map(s => s.trim());
-    };
-
-    // 各個別スタイルの抽出（単語別配列から取得、なければノード全体の単一指定、それもなければデフォルト）
-    const colors = getPropList("colors");
-    const bgs = getPropList("bgs");
-    const bolds = getPropList("bolds");
-    const italics = getPropList("italics");
-
-    const customColor = colors[index] || String(propsMap.color || "#333");
-    const customBg = bgs[index] || String(propsMap.bg_color || "transparent");
-    
-    // 太字判定 (単語個別 or 全体指定)
-    const isBold = bolds[index] === "true" || propsMap.bold === true || String(propsMap.bold) === "true";
-    // 斜体判定 (単語個別 or 全体指定)
-    const isItalic = italics[index] === "true" || propsMap.italic === true || String(propsMap.italic) === "true";
-    
-    const fontSize = String(propsMap.size || "14px");
-
-    return {
-      "font-weight": isBold ? "bold" : "normal",
-      color: customColor,
-      "font-size": fontSize,
-      "font-style": isItalic ? "italic" : "normal",
-      "background-color": customBg !== "none" ? customBg : "transparent",
-      padding: customBg !== "transparent" && customBg !== "none" ? "2px 6px" : "0px",
-      "border-radius": customBg !== "transparent" && customBg !== "none" ? "3px" : "0px",
-      "line-height": "1.6",
-      "margin-right": "4px", // 単語間のスペースを表現
-      "display": "inline-block" // 背景色のパディングを綺麗に見せるため
-    };
-  };
-
-  // 表示から除外する装飾用プロパティのリストを更新
-  const displayPropertyValues = createMemo(() => {
-    if (!props.node.properties) return [];
-    const filterKeys = ["bold", "color", "size", "italic", "bg_color", "colors", "bgs", "bolds", "italics"];
-    return Object.entries(props.node.properties)
-      .filter(([key]) => !filterKeys.includes(key))
-      .map(([_, val]) => String(val));
-  });
-/*
   // 【機能拡張】装飾用のスタイルプロパティ（bg_colorを追加）を除外してテキストを抽出
   const displayPropertyValues = createMemo(() => {
     if (!props.node.properties) return [];
@@ -362,7 +311,6 @@ export function KdlNodeView(props: { node: Node; isShowRaw: any }) {
       ) // bg_color もテキスト出力から除外
       .map(([_, val]) => String(val));
   });
-*/
 
   return (
     <li
@@ -372,38 +320,42 @@ export function KdlNodeView(props: { node: Node; isShowRaw: any }) {
         "margin-left": "10px",
       }}
     >
+      {/* 【変更箇所】ノード名の描画を完全に削除しました。本文(values)とプロパティのみをマッピングします */}
 
-{/*
+      {/* 本文テキスト（値）の表示：ノード名が消えたため、左端にスッキリ配置されるようmarginを調整 */}
+      {/*
+      <Show when={props.node.values && props.node.values.length > 0}>
+        <span style={{ color: "#333", "font-size": "14px" }}>
+          {props.node.values.map((v) => String(v)).join(", ")}
+        </span>
+      </Show>
+      */}
       <Show when={props.node.values && props.node.values.length > 0}>
         <span style={textStyle()}>
           {props.node.values.map((v) => String(v)).join(", ")}
         </span>
       </Show>
 
+      {/* プロパティ（属性）の表示：値がない場合はこれが先頭になります */}
+      {/*
+      <Show when={props.node.properties && Object.keys(props.node.properties).length > 0}>
+        <span style={{ 
+          color: "#4caf50", 
+          "margin-left": props.node.values && props.node.values.length > 0 ? "8px" : "0px", 
+          "font-style": "italic",
+          "font-weight": props.node.values && props.node.values.length > 0 ? "normal" : "bold", // 値がない(見出し等の)場合は少し強調
+          "font-size": props.node.values && props.node.values.length > 0 ? "13px" : "15px"
+        }}>
+	  {Object.values(props.node.properties).map((v) => String(v)).join(" ")}
+        </span>
+      </Show>
+      */}
       <Show when={displayPropertyValues().length > 0}>
         <span style={textStyle()}>
+          {/* テキストとプロパティ値が両方ある場合は少し隙間を空ける */}
           <Show when={props.node.values && props.node.values.length > 0}>
             &nbsp;
           </Show>
-          {displayPropertyValues().join(" ")}
-        </span>
-      </Show>
-*/}
-    {/* 【変更箇所】単語（値の配列要素）ごとに For で回し、インデックスに応じたスタイルを個別に適用 */}
-      <Show when={props.node.values && props.node.values.length > 0}>
-        <For each={props.node.values}>
-          {(value, index) => (
-            <span style={getWordStyle(index())}>
-              {String(value)}
-            </span>
-          )}
-        </For>
-      </Show>
-
-      {/* プロパティ（属性）の表示 */}
-      <Show when={displayPropertyValues().length > 0}>
-        <span style={getWordStyle(0)}>
-          <Show when={props.node.values && props.node.values.length > 0}>&nbsp;</Show>
           {displayPropertyValues().join(" ")}
         </span>
       </Show>
