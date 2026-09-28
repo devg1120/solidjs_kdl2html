@@ -58,6 +58,8 @@ document {
         data "macOS" 90
         data "Linux" 25
     }
+
+    img "https://samplelib.com/jpeg/sample-photo-3840x2160.jpg"
 }
 
 `,

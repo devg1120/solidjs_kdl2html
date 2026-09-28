@@ -417,6 +417,12 @@ export function KdlNodeView(props: { node: Node; isShowRaw: any }) {
     );
   }
 
+  if (props.node.name === "img" && props.node.children) {
+
+    return <img style={{ }} src={props.node.values[0]} width="300" height="200" ></img>;
+
+  }
+
   if (props.node.name === "gap" && props.node.children) {
     let size = "30px";
     if (props.node.values.length > 0) {
