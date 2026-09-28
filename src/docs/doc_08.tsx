@@ -1,5 +1,6 @@
 const Docs = {
   title: "SVG 4",
+  file:  new URL(import.meta.url).pathname.split('/').pop(),
   code: `
   svg {
 diagram orientation="vertical"

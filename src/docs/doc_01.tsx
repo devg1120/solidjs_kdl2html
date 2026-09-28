@@ -1,5 +1,6 @@
 const Docs = {
   title: "NEST LIST",
+  file:  new URL(import.meta.url).pathname.split('/').pop(),
   code: `
   
   shopping_list {

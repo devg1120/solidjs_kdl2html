@@ -1,5 +1,6 @@
 const Docs = {
   title: "PARAG 1",
+  file:  new URL(import.meta.url).pathname.split('/').pop(),
   code: `
 
 document title="SolidJSによるモダン開発" author="開発チーム" {

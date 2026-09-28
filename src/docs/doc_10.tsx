@@ -1,5 +1,6 @@
 const Docs = {
   title: "PARAG 2 STR ATTR",
+  file:  new URL(import.meta.url).pathname.split('/').pop(),
   code: `
 document {
     title "SolidJSのスタイル機能" bold="true" size="20px" color="#0076d6"

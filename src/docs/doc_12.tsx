@@ -1,5 +1,6 @@
 const Docs = {
   title: "CHART",
+  file:  new URL(import.meta.url).pathname.split('/').pop(),
   code: `
 document {
     title "2026年度 プロジェクト進捗レポート" size="20px" bold="true" color="#333"

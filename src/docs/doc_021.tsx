@@ -1,5 +1,6 @@
 const Docs = {
   title: "BOOK INDEX",
+  file:  new URL(import.meta.url).pathname.split('/').pop(),
   code: `
 
 "SolidJS超入門" {

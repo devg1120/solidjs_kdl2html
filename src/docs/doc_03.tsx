@@ -1,5 +1,6 @@
 const Docs = {
   title: "TABLE 1",
+  file:  new URL(import.meta.url).pathname.split('/').pop(),
   code: `
   table {
 row rank=1 product="スマートフォン" price=98000 category="ガジェット" sales=1200

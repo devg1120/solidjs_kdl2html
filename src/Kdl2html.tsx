@@ -1,4 +1,4 @@
-import { createSignal, createMemo, For, Show, onMount } from "solid-js";
+import { createSignal, createEffect, createMemo, For, Show, onMount, onCleanup } from "solid-js";
 import { parse } from "kdljs";
 import type { Node } from "kdljs";
 import { Docs } from "./Docs";
@@ -17,6 +17,32 @@ import { KdlSvgDiagram } from "./KdlSvgDiagram";
 export default function KdlToHtmlApp() {
   const [selectedValue, setSelectedValue] = createSignal(FP);
 
+  function selectChange(to) {
+       let v = selectedValue() + to;
+       if (v < 0) { v = 0; }
+       if (v > Docs.length -1) { v = Docs.length -1; }
+       setSelectedValue(v)
+       /*
+     setKdlInput(Docs[selectedValue()].code);
+     let file = '-'
+     if ('file' in Docs[selectedValue()]) {
+          file =  Docs[selectedValue()].file
+      }
+      setKdlFile(file)
+     */
+  }
+
+  createEffect(() => {
+     let v = selectedValue();
+     setKdlInput(Docs[v].code);
+     let file = '-'
+     if ('file' in Docs[v]) {
+          file =  Docs[v].file
+      }
+      setKdlFile(file)
+  });
+
+
   const [isDebug, setIsDebug] = createSignal(false);
   const toggle_debug = () => setIsDebug(!isDebug());
 
@@ -34,10 +60,39 @@ export default function KdlToHtmlApp() {
 
   const [kdlInput, setKdlInput] = createSignal(Docs[selectedValue()].code);
 
+  let file = '-'
+  if ('file' in Docs[selectedValue()]) {
+       file =  Docs[selectedValue()].file
+   }
+
+  const [kdlFile, setKdlFile]   = createSignal(file)
+
+
   onMount(() => {
     document.body.style.margin = "0";
     document.body.style.padding = "0";
     document.body.style.overflow = "hidden";
+
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key === "ArrowDown") {
+        event.preventDefault(); // 必要に応じてデフォルトのスクロール挙動を防止
+        console.log("下矢印キーが押されました");
+	selectChange(1)
+        // ここに実行したい処理を記述
+     } else if (event.key === "ArrowUp") {
+        event.preventDefault(); // 必要に応じてデフォルトのスクロール挙動を防止
+        console.log("上矢印キーが押されました");
+	selectChange(-1)
+        // ここに実行したい処理を記述
+      }
+    };
+    document.addEventListener("keydown", handleKeyDown);
+
+
+  });
+
+  onCleanup(() => {
+     document.removeEventListener("keydown", handleKeyDown);
   });
 
   const [leftWidth, setLeftWidth] = createSignal(50);
@@ -188,13 +243,48 @@ export default function KdlToHtmlApp() {
           value={selectedValue()}
           onChange={(e) => {
             setSelectedValue(Number(e.currentTarget.value));
+	    /*
             setKdlInput(Docs[Number(e.currentTarget.value)].code);
+  let file = '-'
+  if ('file' in Docs[selectedValue()]) {
+       file =  Docs[selectedValue()].file
+   }
+            setKdlFile(file)
+	   */
           }}
         >
           <For each={options}>
             {(item) => <option value={item.value}>{item.label}</option>}
           </For>
         </select>
+
+	<label
+          style={{
+             display: "inline-block", 
+            "background-color":  "lightgray" ,
+            margin: "0px 0px 0px 30px",
+            padding: "6px 20px",
+            width: "200px",
+            //border:  "none",
+            "border-radius": "3px",
+            "font-size": "14px",
+          }}
+	
+	     >{kdlFile()}</label>
+
+	<label
+          style={{
+             display: "inline-block", 
+            "background-color":  "#ffffff" ,
+            margin: "0px 0px 0px 10px",
+            padding: "6px 1px",
+            width: "40px",
+            "font-size": "14px",
+	    "text-align": "right",
+          }}
+	
+	     >{selectedValue()+1}/{Docs.length}</label>
+
         <button
           onClick={toggle_debug}
           style={{

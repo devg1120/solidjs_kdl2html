@@ -1,5 +1,6 @@
 const Docs = {
   title: "SVG 1",
+  file:  new URL(import.meta.url).pathname.split('/').pop(),
   code: `
   svg {
 node "start" label="ログイン画面" type="circle"

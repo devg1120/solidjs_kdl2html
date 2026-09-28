@@ -12,7 +12,7 @@ import Doc_10 from "./docs/doc_10";
 import Doc_11 from "./docs/doc_11";
 import Doc_12 from "./docs/doc_12";
 
-export const FP = 11;
+export const FP = 0;
 
 export const Docs = [
   Doc_01,
@@ -30,7 +30,7 @@ export const Docs = [
   Doc_12,
 ];
 
-const filename = new URL(import.meta.url).pathname.split('/').pop();
-console.log(filename)
+//const filename = new URL(import.meta.url).pathname.split('/').pop();
+//console.log(filename)
 
 

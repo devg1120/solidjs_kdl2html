@@ -1,5 +1,6 @@
 const Docs = {
   title: "TABLE 2",
+  file:  new URL(import.meta.url).pathname.split('/').pop(),
   code: `
   table {
 department "開発部" {

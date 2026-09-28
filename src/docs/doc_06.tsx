@@ -1,5 +1,6 @@
 const Docs = {
   title: "SVG 2",
+  file:  new URL(import.meta.url).pathname.split('/').pop(),
   code: `
   svg {
 node "start" label="開始ゲート" type="circle" color="#e8f5e9" stroke="#2e7d32" text_color="#1b5e20"
