@@ -5,7 +5,9 @@ const Docs = {
 document title="SolidJSによるモダン開発" author="開発チーム" {
     
     section heading="1. はじめに" {
-        paragraph "SolidJSは、Reactに似たJSXの書き方を採用しながらも、仮想DOM（Virtual DOM）を一切使用しない革新的なフロントエンドライブラリです。コンポーネントは最初の1回しか実行されないため、非常に高いパフォーマンスを発揮します。"
+        paragraph "SolidJSは、Reactに似たJSXの書き方を採用しながらも、\\
+		仮想DOM（Virtual DOM）を一切使用しない革新的なフロントエンドライブラリです。\\
+		コンポーネントは最初の1回しか実行されないため、非常に高いパフォーマンスを発揮します。"
     }
     
     section heading="2. 主な特徴とメリット" {
