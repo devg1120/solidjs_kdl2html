@@ -217,9 +217,12 @@ export function KdlTableView_Raw(props: { rows: Node[] }) {
 // --- 各ノードを表示する子コンポーネント（ノード名非表示版） ---
 export function KdlNodeView(props: { node: Node; isShowRaw: any }) {
 
-   //let tmp = String(props.node.values[0]);
-   //let tmp2 = tmp.replaceAll(' ', '_')
-   //props.node.values[0] = tmp2;
+   console.log(props.node.values[0])
+   //let tmp = props.node.values[0]
+   let tmp = String(props.node.values[0]);
+   let tmp2 = tmp.replaceAll(' ', " ")
+   console.log(tmp2)
+   props.node.values[0] = tmp2;
    
   // 【機能拡張】ノード名が "grid" の処理をアップデート
   if (props.node.name === "grid" && props.node.children) {
@@ -531,8 +534,7 @@ export function KdlNodeView(props: { node: Node; isShowRaw: any }) {
       "border-radius": customBg !== "transparent" && customBg !== "none" ? "3px" : "0px",
       "line-height": "1.6",
       "margin-right": "4px", // 単語間のスペースを表現
-      "display": "inline-block", // 背景色のパディングを綺麗に見せるため
-      "white-space": "pre-wrap", //スペース数を維持
+      "display": "inline-block" // 背景色のパディングを綺麗に見せるため
     };
   };
 

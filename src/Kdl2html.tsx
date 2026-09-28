@@ -74,16 +74,12 @@ export default function KdlToHtmlApp() {
     document.body.style.overflow = "hidden";
 
     const handleKeyDown = (event: KeyboardEvent) => {
-      if (event.key === "ArrowDown") {
+      if (event.shiftKey && event.key === "ArrowDown") {
         event.preventDefault(); // 必要に応じてデフォルトのスクロール挙動を防止
-        console.log("下矢印キーが押されました");
 	selectChange(1)
-        // ここに実行したい処理を記述
-     } else if (event.key === "ArrowUp") {
+     } else if (event.shiftKey && event.key === "ArrowUp") {
         event.preventDefault(); // 必要に応じてデフォルトのスクロール挙動を防止
-        console.log("上矢印キーが押されました");
 	selectChange(-1)
-        // ここに実行したい処理を記述
       }
     };
     document.addEventListener("keydown", handleKeyDown);
