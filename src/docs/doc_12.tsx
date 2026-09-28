@@ -71,6 +71,9 @@ document {
 }
    map "https://www.google.com/maps/embed?pb=!1m14!1m12!1m3!1d13097.386053150183!2d135.22680752954528!3d34.84751957543601!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!5e0!3m2!1sja!2sjp!4v1790598440911!5m2!1sja!2sjp" width="400" height="250" 
 
+  gap
+
+  www "https://web.pref.hyogo.lg.jp/"  width="450"
 `,
 };
 
