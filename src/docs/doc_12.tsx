@@ -60,7 +60,16 @@ document {
     }
 
     img "https://samplelib.com/jpeg/sample-photo-3840x2160.jpg"
+
+    img "https://placehold.jp/3d4070/ffffff/150x150.png"  width="150"  height="150"
+
+    img "https://placehold.jp/3d4070/ffffff/350x250.png"  width="350"  height="250"
+
+/*
+ <iframe src="https://www.google.com/maps/embed?pb=!1m14!1m12!1m3!1d13097.386053150183!2d135.22680752954528!3d34.84751957543601!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!5e0!3m2!1sja!2sjp!4v1790598440911!5m2!1sja!2sjp" width="600" height="450" style="border:0;" allowfullscreen="" loading="lazy" referrerpolicy="strict-origin-when-cross-origin"></iframe>
+ */
 }
+   map "https://www.google.com/maps/embed?pb=!1m14!1m12!1m3!1d13097.386053150183!2d135.22680752954528!3d34.84751957543601!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!5e0!3m2!1sja!2sjp!4v1790598440911!5m2!1sja!2sjp" width="400" height="250" 
 
 `,
 };

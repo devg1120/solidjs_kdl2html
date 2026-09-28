@@ -418,11 +418,50 @@ export function KdlNodeView(props: { node: Node; isShowRaw: any }) {
   }
 
   if (props.node.name === "img" && props.node.children) {
+	  let width = "300";
+	  let height = "200";
 
-    return <img style={{ }} src={props.node.values[0]} width="300" height="200" ></img>;
+	  if ( "properties" in props.node) {
+	      if ( "width" in props.node.properties) {
+	         width = props.node.properties.width;
+              }
+	      if ( "height" in props.node.properties) {
+	         height = props.node.properties.height;
+              }
+
+	  }
+
+    return <img style={{ }} src={props.node.values[0]} width={width} height={height} ></img>;
 
   }
 
+  if (props.node.name === "map" && props.node.children) {
+	  let width = "600";
+	  let height = "450";
+
+	  if ( "properties" in props.node) {
+	      if ( "width" in props.node.properties) {
+	         width = props.node.properties.width;
+              }
+	      if ( "height" in props.node.properties) {
+	         height = props.node.properties.height;
+              }
+
+	  }
+
+    return <iframe 
+	       src={props.node.values[0]}
+       	       width={width}
+       	       height={height}
+       	       style="border:0;" 
+       	       allowfullscreen="true" 
+       	       loading="lazy" 
+       	       referrerpolicy="strict-origin-when-cross-origin">
+	</iframe>
+
+
+
+  }
   if (props.node.name === "gap" && props.node.children) {
     let size = "30px";
     if (props.node.values.length > 0) {

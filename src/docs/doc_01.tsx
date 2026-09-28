@@ -4,7 +4,7 @@ const Docs = {
   code: `
   
   shopping_list {
- a   野菜 {
+ a   "野   菜" {
       a1  "キャベツ"
       a2 "にんじん"
       a3  "トマト"
