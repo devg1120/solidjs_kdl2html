@@ -74,22 +74,6 @@ document {
   gap
 
   www "https://web.pref.hyogo.lg.jp/"  width="450"
-
-
-// 左右分割 (デフォルト)
-split "vertical" {
-//split "horizontal" {
-    tabs {
-        tab "左側のメニュー" {
-            node "項目 A"
-            node "項目 B"
-        }
-    }
-    chart "右側のレポート" type="bar" {
-        data "売上" 120
-        data "経費" 70
-    }
-}
 `,
 };
 

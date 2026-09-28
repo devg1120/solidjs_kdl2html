@@ -221,6 +221,110 @@ export function KdlNodeView(props: { node: Node; isShowRaw: any }) {
    //let tmp2 = tmp.replaceAll(' ', '_')
    //props.node.values[0] = tmp2;
    
+ // 【新規追加】ノード名が "split" の場合にインライン SplitView として構築
+  if (props.node.name === "split" && props.node.children) {
+    const orientation = () => {
+      const valOrient = props.node.values && props.node.values.length > 0 ? String(props.node.values[0]) : "";
+      const propOrient = props.node.properties?.orientation ? String(props.node.properties.orientation) : "";
+      return (valOrient === "horizontal" || propOrient === "horizontal") ? "horizontal" : "vertical";
+    };
+
+    const [paneSize, setPaneSize] = createSignal(50);
+    let splitContainerRef: HTMLDivElement | undefined;
+
+    const handleSplitMouseDown = (e: MouseEvent) => {
+      e.preventDefault();
+      const isHorizontal = orientation() === "horizontal";
+
+      const handleMouseMove = (moveEvent: MouseEvent) => {
+        if (!splitContainerRef) return;
+        const rect = splitContainerRef.getBoundingClientRect();
+        let newSize = 50;
+        if (isHorizontal) {
+          newSize = ((moveEvent.clientY - rect.top) / rect.height) * 100;
+        } else {
+          newSize = ((moveEvent.clientX - rect.left) / rect.width) * 100;
+        }
+        setPaneSize(Math.max(10, Math.min(90, newSize)));
+      };
+
+      const handleMouseUp = () => {
+        window.removeEventListener("mousemove", handleMouseMove);
+        window.removeEventListener("mouseup", handleMouseUp);
+      };
+      window.addEventListener("mousemove", handleMouseMove);
+      window.addEventListener("mouseup", handleMouseUp);
+    };
+
+    // split内の直下の子ノードを半分に分割（最大2ブロックを想定）
+    const firstChild = () => props.node.children?.[0];
+    const secondChild = () => props.node.children?.[1];
+
+    return (
+      <div
+        ref={splitContainerRef}
+        style={{
+          display: "flex",
+          "flex-direction": orientation() === "vertical" ? "row" : "column",
+          border: "1px solid #bbb",
+          "border-radius": "6px",
+          margin: "16px 0",
+          width: "100%",
+          height: orientation() === "vertical" ? "350px" : "500px",
+          background: "#fdfdfd",
+          overflow: "hidden"
+        }}
+      >
+        {/* 第1パネル */}
+        <div
+          style={{
+            width: orientation() === "vertical" ? `${paneSize()}%` : "100%",
+            height: orientation() === "vertical" ? "100%" : `${paneSize()}%`,
+            padding: "10px",
+            "box-sizing": "border-box",
+            "overflow-y": "auto",
+            "min-height": 0, "min-width": 0
+          }}
+        >
+          <Show when={firstChild()} fallback={<p style={{ color: "#999" }}>Panel 1</p>}>
+            <KdlNodeView node={firstChild()!} isShowRaw={props.isShowRaw} />
+          </Show>
+        </div>
+
+        {/* インラインディバイダー */}
+        <div
+          onMouseDown={handleSplitMouseDown}
+          style={{
+            width: orientation() === "vertical" ? "4px" : "100%",
+            height: orientation() === "vertical" ? "100%" : "4px",
+            cursor: orientation() === "vertical" ? "col-resize" : "row-resize",
+            "background-color": "#ccc",
+            transition: "background-color 0.2s",
+            flex: "0 0 auto"
+          }}
+          onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = "#999")}
+          onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = "#ccc")}
+        />
+
+        {/* 第2パネル */}
+        <div
+          style={{
+            width: orientation() === "vertical" ? `${100 - paneSize()}%` : "100%",
+            height: orientation() === "vertical" ? "100%" : `${100 - paneSize()}%`,
+            padding: "10px",
+            "box-sizing": "border-box",
+            "overflow-y": "auto",
+            "min-height": 0, "min-width": 0
+          }}
+        >
+          <Show when={secondChild()} fallback={<p style={{ color: "#999" }}>Panel 2</p>}>
+            <KdlNodeView node={secondChild()!} isShowRaw={props.isShowRaw} />
+          </Show>
+        </div>
+      </div>
+    );
+  }
+
   // 【機能拡張】ノード名が "grid" の処理をアップデート
   if (props.node.name === "grid" && props.node.children) {
     const cols = () => Number(props.node.properties?.cols) || 2;
