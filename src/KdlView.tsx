@@ -589,6 +589,17 @@ export function KdlNodeView(props: { node: Node; isShowRaw: any }) {
 	</iframe>
   }
 
+  if (props.node.name === "qt" && props.node.children) {
+    let text_  = props.node.values[0] ;
+    return <div 
+            style={{ 
+		    "border-left" : "solid 5px red",
+		    "padding-left" : "10px ",
+
+	    }}>
+	       {props.node.values[0]}
+    </div>;
+  }
 
   if (props.node.name === "gap" && props.node.children) {
     let size = "30px";
