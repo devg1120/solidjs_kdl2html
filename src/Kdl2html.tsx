@@ -425,6 +425,7 @@ export default function KdlToHtmlApp() {
                       "font-family": "monospace",
                       "font-size": "13px",
                       "white-space": "pre-wrap",
+		      "word-break": "break-all",
                     }}
                   >
                     {errorObj().debug_error}

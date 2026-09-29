@@ -855,6 +855,8 @@ export function KdlNodeView(props: { node: Node; isShowRaw: any }) {
       "margin-right": "4px", // 単語間のスペースを表現
       "display": "inline-block", // 背景色のパディングを綺麗に見せるため
       "white-space": "pre-wrap", //スペース数を維持
+      "word-break": "break-all",  //GS GUSA
+      "overflow-wrap": "anywhere",   //GS GUSA
     };
   };
 
@@ -882,6 +884,7 @@ export function KdlNodeView(props: { node: Node; isShowRaw: any }) {
 
   return (
     <li
+     id={props.node.name} 
       style={{
         "margin-bottom": "8px",
         "list-style-type": "none",
