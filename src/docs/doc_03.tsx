@@ -1,13 +1,85 @@
 const Docs = {
-  title: "TABLE 1",
+  title: "ELEMENT",
   file:  new URL(import.meta.url).pathname.split('/').pop(),
   code: `
-  table {
-row rank=1 product="スマートフォン" price=98000 category="ガジェット" sales=1200
-row rank=2 product="ワイヤレスイヤホン" price=15000 category="オーディオ" sales=3500
-row rank=3 product="スマートウォッチ" price=32000 category="ガジェット" sales=850
-row rank=4 product="4Kモニター" price=45000 category="PC周辺機器" sales=400
+qt "AAAAAAAAAAAAAAAAA"
+
+qt "AAAAAAAAAA \
+     BBBBBBBBB \
+     CCCCCCCCC"
+qt 1233444444
+
+gap 
+
+qt title {
+
+    p "aaaaaa      bbbbbbb"
+    p "aaaaaa      bbbbbbb"
+
 }
+
+qt title color="lightgreen"  {
+
+    p "aaaaaa      bbbbbbb"
+    p "aaaaaa      bbbbbbb"
+
+}
+
+qt title color="gray"  width="12" {
+
+    p "aaaaaa      bbbbbbb"
+    p "aaaaaa      bbbbbbb"
+
+}
+
+qt title  {
+
+    p "aaaaaa      bbbbbbb"
+    qt  xxxxx {
+            qt yyyyy {
+		    qt zzzzzz
+	    }
+    }
+
+}
+
+
+
+p "pppp qqqqqq xxxx"
+
+gap 
+
+code """
+foo
+This is the base indentation
+bar
+""" color="red"  width="300"
+
+hcode """
+  function $initHighlight(block, cls) {
+    try {
+      if (cls.search(/-highlight/) != -1)
+        return process(block, true, 0x0F) +
+           ' class=""';
+    } catch (e) {
+    /* handle exception */
+    }
+    for (var i = 0 / 2; i < classes.length; i++) {
+      if (checkCondition(classes[i]) === undefined)
+        return //]/g;
+    }
+  }
+"""
+
+gap
+
+checklist チェックリスト {
+  a ばなな  checked="true"
+  b 林檎
+  c みかん  checked="true"
+
+}
+
 `,
 };
 

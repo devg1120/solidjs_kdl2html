@@ -6,6 +6,10 @@ import { Docs } from "./Docs";
 import { KdlSvgDiagram } from "./KdlSvgDiagram";
 import { KdlChart } from "./KdlChart"
 
+import { CodeBlock } from './CodeBlock';
+
+
+
 // --- テーブル表示用のコンポーネント ---
 export function KdlTableView(props: { rows: Node[] }) {
   const headers = createMemo(() => {
@@ -590,16 +594,150 @@ export function KdlNodeView(props: { node: Node; isShowRaw: any }) {
   }
 
   if (props.node.name === "qt" && props.node.children) {
-    let text_  = props.node.values[0] ;
+    let color = "lightgray"
+    let width = "6"
+    //let text_  = props.node.values[0] ;
+	  if ( "properties" in props.node) {
+	      if ( "color" in props.node.properties) {
+	         color = props.node.properties.color;
+              }
+	      if ( "width" in props.node.properties) {
+	         width = props.node.properties.width;
+              }
+
+	  }
     return <div 
             style={{ 
-		    "border-left" : "solid 5px red",
+		    "border-left" : `solid ${width}px ${color}`,
 		    "padding-left" : "10px ",
 
 	    }}>
 	       {props.node.values[0]}
+               <Show when={ props.node.children &&  props.node.children.length > 0  } >
+                 <For each={props.node.children}>
+                   {(childNode) => (
+                     <KdlNodeView node={childNode} isShowRaw={props.isShowRaw} />
+                   )}
+	          </For>
+
+               </Show>
     </div>;
   }
+
+  if (props.node.name === "checklist" && props.node.children) {
+    let color = "lightgray"
+    let width = "6"
+    //let text_  = props.node.values[0] ;
+	  if ( "properties" in props.node) {
+	      if ( "color" in props.node.properties) {
+	         color = props.node.properties.color;
+              }
+	      if ( "width" in props.node.properties) {
+	         width = props.node.properties.width;
+              }
+
+	  }
+    return <div 
+            style={{ 
+
+	    }}>
+	       {props.node.values[0]}
+	       <div class="checkbox-group"
+                     style={{ 
+                            display: "block",
+                            "margin-top": "4px"
+         	          }}
+	       >
+
+               <Show when={ props.node.children &&  props.node.children.length > 0  } >
+                 <For each={props.node.children}>
+                   {(childNode) => (
+                        <label
+                         style={{ 
+                          display: "block",
+                          "margin-bottom": "4px",
+                          "margin-left": "4px",
+                          "padding-left": "4px"
+                          }}
+                        >
+                           <Show when={ childNode.properties &&   childNode.properties.checked == "true"}
+			        fallback={
+                                     <>
+				     <input type="checkbox" name="item" value="apple" style={{"margin-right":"10px"}} />{childNode.values[0]} 
+				     </>
+			        } >
+                               <input type="checkbox" checked name="item" value="apple" style={{"margin-right":"10px"}} />{childNode.values[0]} 
+			  </Show>
+                        </label>
+                   )}
+	          </For>
+
+               </Show>
+	       </div>
+    </div>;
+  }
+
+  if (props.node.name === "code" && props.node.children) {
+    let color   = "#000000"
+    let bgcolor = "#E6E6FA"
+    let width   = "fit-content"
+    let radius  = "8"
+    //let text_  = props.node.values[0] ;
+
+    if ( "properties" in props.node) {
+      if ( "color" in props.node.properties) {
+         color = props.node.properties.color;
+      }
+      if ( "bgcolor" in props.node.properties) {
+         bgcolor = props.node.properties.bgcolor;
+      }
+      if ( "width" in props.node.properties) {
+         width = `${props.node.properties.width}px`;
+      }
+
+    }
+    return <pre
+            style={{ 
+              "background-color" : bgcolor,
+              "color" : color,
+	      "border-radius": `${radius}px`,
+	      "width": width,
+	      "padding": "14px 10px",
+	    }}>
+	    <code
+            style={{ 
+              //"background-color" : bgcolor
+	    }}
+	    >
+	       {props.node.values[0]}
+	    </code>
+    </pre>;
+  }
+
+  if (props.node.name === "hcode" && props.node.children) {
+    let color   = "#000000"
+    let bgcolor = "#E6E6FA"
+    let width   = "fit-content"
+    let radius  = "8"
+    //let text_  = props.node.values[0] ;
+
+    if ( "properties" in props.node) {
+      if ( "color" in props.node.properties) {
+         color = props.node.properties.color;
+      }
+      if ( "bgcolor" in props.node.properties) {
+         bgcolor = props.node.properties.bgcolor;
+      }
+      if ( "width" in props.node.properties) {
+         width = `${props.node.properties.width}px`;
+      }
+
+    }
+    
+    return  <CodeBlock code={props.node.values[0]} language="javascript" />
+
+  }
+
 
   if (props.node.name === "gap" && props.node.children) {
     let size = "30px";
