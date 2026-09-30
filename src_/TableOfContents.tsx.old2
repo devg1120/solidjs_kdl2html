@@ -1,4 +1,4 @@
-import { createSignal, createEffect, For } from "solid-js";
+import { createSignal, createEffect, onMount, For } from "solid-js";
 
 interface TocItem {
   id: string;
@@ -10,15 +10,13 @@ export function TableOfContents(props) {
   const [toc, setToc] = createSignal<TocItem[]>([]);
 
   createEffect(() => {
-    // 1. props.docRef() だけでなく、kdlInput() もここで読み出すことで
-    //    データやドキュメントが切り替わるたびにこの createEffect が確実に再実行されます
     const contentArea = props.docRef();
-    const _trigger = props.kdlInput?.(); 
-    
     if (!contentArea) return;
 
-    // 2. SolidJSが新しいデータに基づいて DOM (li要素) を構築し終えるのを待つ
+    // 【重要】SolidJSが子コンポーネント(KdlNodeViewなど)のDOM描画・マウントを
+    // 完全に完了するまで実行を遅延させる
     requestAnimationFrame(() => {
+      // 描画完了後のDOMから li 要素をすべて取得
       const headings = contentArea.querySelectorAll("li");
       const items: TocItem[] = [];
 
@@ -27,6 +25,7 @@ export function TableOfContents(props) {
           return;
         }
 
+        // heading.children[0] が存在するか安全にチェック
         const firstChild = heading.children[0];
         const text = firstChild ? (firstChild.textContent || "-") : (heading.textContent || "-");
 

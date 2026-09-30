@@ -482,7 +482,7 @@ export default function KdlToHtmlApp() {
                 }}
               >
 	      <Show when={isTOC()}>
-	          <TableOfContents docRef={doc} kdlInput={kdlInput}/>
+	          <TableOfContents docRef={doc} />
 	      </Show>
               <div  ref={docRef} >
                 <Switch>

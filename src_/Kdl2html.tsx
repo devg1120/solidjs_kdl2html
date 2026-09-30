@@ -25,6 +25,8 @@ import { TableOfContents } from "./TableOfContents";
 // 2. メインコンポーネント
 export default function KdlToHtmlApp() {
   const [selectedValue, setSelectedValue] = createSignal(FP);
+  const [isTocOpen, setIsTocOpen] = createSignal(true);
+
 
   function selectChange(to) {
     let v = selectedValue() + to;
@@ -481,9 +483,44 @@ export default function KdlToHtmlApp() {
                   "padding-left": "0px",
                 }}
               >
+	      {/*
 	      <Show when={isTOC()}>
 	          <TableOfContents docRef={doc} kdlInput={kdlInput}/>
 	      </Show>
+*/}
+
+      <Show when={isTOC()}>
+            <div
+              style={{
+                // 親の定義した isTocOpen() に従って横幅を動的に切り替える
+  position: "fixed",
+  top: "0",
+  left: "0",
+  "z-index": "999",
+                width: isTocOpen() ? "220px" : "45px",
+                "min-width": isTocOpen() ? "180px" : "45px",
+                height: "100%",
+                "max-height": "100%",
+                "min-height": 0,
+                overflow: "hidden",
+                "box-sizing": "border-box",
+                "border-left": "1px solid #ccc",
+                background: "#fafafa",
+                flex: "0 0 auto",
+                transition: "width 0.3s ease-in-out, min-width 0.3s ease-in-out",
+              }}
+            >
+              {/* 子コンポーネントへ開閉状態と制御関数を Props として引き渡す */}
+              <TableOfContents
+                docRef={doc}
+                kdlInput={kdlInput}
+                isOpen={isTocOpen}
+                setIsOpen={setIsTocOpen}
+              />
+            </div>
+          </Show>
+
+
               <div  ref={docRef} >
                 <Switch>
                   <Match when={!isShowRaw()}>
