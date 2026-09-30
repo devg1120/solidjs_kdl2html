@@ -8,16 +8,18 @@ interface TocItem {
 
 export function TableOfContents(props) {
   const [toc, setToc] = createSignal<TocItem[]>([]);
-  console.log(props.docRef);
+  //console.log(props.docRef);
 
   createEffect(() => {
     const contentArea = props.docRef();
-    //console.log(props.docRef);
+    console.log("props.docRef",contentArea);
 
     if (!contentArea) return;
 
     // h2 と h3 要素をすべて取得
     const headings = contentArea.querySelectorAll("li");
+    console.log(headings)
+
     const items: TocItem[] = [];
 
     headings.forEach((heading, index) => {
@@ -29,7 +31,7 @@ export function TableOfContents(props) {
 	      return
       }
 
-      console.log(heading.id)
+      //console.log(heading.id)
       items.push({
         id: heading.id,
         //text: heading.textContent || "",
@@ -39,42 +41,11 @@ export function TableOfContents(props) {
      
     });
   console.log(items)
+  setToc(items);
   });
 
 
-/*
-  onMount(() => {
-    console.log("onMount")
-    // 記事本文のコンテナ要素を取得（id="content" 内のヘッダーを対象にする）
-    const contentArea = props.docRef;
-    //console.log(props.docRef);
-
-    if (!contentArea) return;
-
-    // h2 と h3 要素をすべて取得
-    const headings = contentArea.querySelectorAll("li");
-    const items: TocItem[] = [];
-
-    headings.forEach((heading, index) => {
-      // 既存のidがなければ自動でユニークなidを付与
-      console.log(heading.id)
-      
-      if (!heading.id) {
-        heading.id = `heading-${index}`;
-      }
-
-      items.push({
-        id: heading.id,
-        text: heading.textContent || "",
-        level: heading.tagName === "H2" ? 2 : 3,
-      });
-     
-    });
-
-    //setToc(items);
-  });
-*/
-  return (<></>)
+//  return (<></>)
 
 
   return (

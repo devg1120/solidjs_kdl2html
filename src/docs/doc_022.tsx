@@ -4,6 +4,7 @@
 const Docs = {
   title: "BOOK TOC",
   file:  new URL(import.meta.url).pathname.split('/').pop(),
+  toc: true,
   code: `
 
 "SolidJS超入門" {

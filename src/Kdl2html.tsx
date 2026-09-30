@@ -72,6 +72,17 @@ export default function KdlToHtmlApp() {
 
   const [kdlInput, setKdlInput] = createSignal(Docs[selectedValue()].code);
 
+
+ function isTOC() {
+
+  if (Docs[selectedValue()].toc) {
+     return Docs[selectedValue()].toc
+
+  }
+  return false
+
+ }
+
   let file = "-";
   if ("file" in Docs[selectedValue()]) {
     file = Docs[selectedValue()].file;
@@ -83,7 +94,7 @@ export default function KdlToHtmlApp() {
 
   onMount(() => {
     setMount(true)
-    console.log(docRef)
+    //console.log(docRef)
     setDoc(docRef)
     document.body.style.margin = "0";
     document.body.style.padding = "0";
@@ -470,7 +481,7 @@ export default function KdlToHtmlApp() {
                   "padding-left": "0px",
                 }}
               >
-	      <Show when={mount()}>
+	      <Show when={isTOC()}>
 	          <TableOfContents docRef={doc} />
 	      </Show>
               <div  ref={docRef} >
