@@ -20,6 +20,7 @@ import { KdlNodeView } from "./KdlView";
 import { KdlNodeView_Raw } from "./KdlView";
 
 import { KdlSvgDiagram } from "./KdlSvgDiagram";
+import { TableOfContents } from "./TableOfContents";
 
 // 2. メインコンポーネント
 export default function KdlToHtmlApp() {
@@ -77,8 +78,13 @@ export default function KdlToHtmlApp() {
   }
 
   const [kdlFile, setKdlFile] = createSignal(file);
+  const [mount, setMount] = createSignal(file);
+  const [doc, setDoc] = createSignal(null);
 
   onMount(() => {
+    setMount(true)
+    console.log(docRef)
+    setDoc(docRef)
     document.body.style.margin = "0";
     document.body.style.padding = "0";
     document.body.style.overflow = "hidden";
@@ -95,9 +101,9 @@ export default function KdlToHtmlApp() {
     document.addEventListener("keydown", handleKeyDown);
   });
 
-  onCleanup(() => {
-    document.removeEventListener("keydown", handleKeyDown);
-  });
+  //onCleanup(() => {
+  //  document.removeEventListener("keydown", handleKeyDown);
+  //});
 
   const [leftWidth, setLeftWidth] = createSignal(50);
   let containerRef: HTMLDivElement | undefined;
@@ -464,6 +470,9 @@ export default function KdlToHtmlApp() {
                   "padding-left": "0px",
                 }}
               >
+	      <Show when={mount()}>
+	          <TableOfContents docRef={doc} />
+	      </Show>
               <div  ref={docRef} >
                 <Switch>
                   <Match when={!isShowRaw()}>

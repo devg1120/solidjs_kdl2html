@@ -1,4 +1,4 @@
-import { createSignal, onMount, For } from "solid-js";
+import { createSignal, createEffect, onMount, For } from "solid-js";
 
 interface TocItem {
   id: string;
@@ -6,20 +6,59 @@ interface TocItem {
   level: number; // 2 = h2, 3 = h3
 }
 
-export function TableOfContents() {
+export function TableOfContents(props) {
   const [toc, setToc] = createSignal<TocItem[]>([]);
+  console.log(props.docRef);
 
-  onMount(() => {
-    // 記事本文のコンテナ要素を取得（id="content" 内のヘッダーを対象にする）
-    const contentArea = document.getElementById("content");
+  createEffect(() => {
+    const contentArea = props.docRef();
+    //console.log(props.docRef);
+
     if (!contentArea) return;
 
     // h2 と h3 要素をすべて取得
-    const headings = contentArea.querySelectorAll("h2, h3");
+    const headings = contentArea.querySelectorAll("li");
+    const items: TocItem[] = [];
+
+    headings.forEach((heading, index) => {
+      
+      if (!heading.id) {
+	      return
+      }
+      if (!heading.id.startsWith("h")) {
+	      return
+      }
+
+      console.log(heading.id)
+      items.push({
+        id: heading.id,
+        //text: heading.textContent || "",
+        text: heading.children[0].textContent || "-",   //span
+        level: Number(heading.id.length) -1,
+      });
+     
+    });
+  console.log(items)
+  });
+
+
+/*
+  onMount(() => {
+    console.log("onMount")
+    // 記事本文のコンテナ要素を取得（id="content" 内のヘッダーを対象にする）
+    const contentArea = props.docRef;
+    //console.log(props.docRef);
+
+    if (!contentArea) return;
+
+    // h2 と h3 要素をすべて取得
+    const headings = contentArea.querySelectorAll("li");
     const items: TocItem[] = [];
 
     headings.forEach((heading, index) => {
       // 既存のidがなければ自動でユニークなidを付与
+      console.log(heading.id)
+      
       if (!heading.id) {
         heading.id = `heading-${index}`;
       }
@@ -29,10 +68,14 @@ export function TableOfContents() {
         text: heading.textContent || "",
         level: heading.tagName === "H2" ? 2 : 3,
       });
+     
     });
 
-    setToc(items);
+    //setToc(items);
   });
+*/
+  return (<></>)
+
 
   return (
     <nav class="toc-container">
