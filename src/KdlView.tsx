@@ -217,10 +217,11 @@ export function KdlTableView_Raw(props: { rows: Node[] }) {
 }
 
 // --- 各ノードを表示する子コンポーネント（ノード名非表示版） ---
-export function KdlNodeView(props: { node: Node; isShowRaw: any }) {
+export function KdlNodeView(props: { node: Node; isShowRaw: any , isTOC:boolean, depth: number}) {
   //let tmp = String(props.node.values[0]);
   //let tmp2 = tmp.replaceAll(' ', '_')
   //props.node.values[0] = tmp2;
+  const depth = props.depth + 1;
 
   // 【新規追加】ノード名が "split" の場合にインライン SplitView として構築
   if (props.node.name === "split" && props.node.children) {
@@ -267,6 +268,7 @@ export function KdlNodeView(props: { node: Node; isShowRaw: any }) {
     // split内の直下の子ノードを半分に分割（最大2ブロックを想定）
     const firstChild = () => props.node.children?.[0];
     const secondChild = () => props.node.children?.[1];
+
 
     return (
       <div
@@ -406,6 +408,8 @@ export function KdlNodeView(props: { node: Node; isShowRaw: any }) {
       const activeNode = tabNodes()[activeTab()];
       return activeNode && activeNode.children ? activeNode.children : [];
     });
+
+
 
     return (
       <div
@@ -977,7 +981,15 @@ export function KdlNodeView(props: { node: Node; isShowRaw: any }) {
   });
 */
 
+    function isShowTOC() {
+        if( props.isTOC && depth == 3) {
+            return true;
+	}
+            return false;
+    }
+
   return (
+	  <>
     <li
       id={props.node.name}
       style={{
@@ -1029,7 +1041,7 @@ export function KdlNodeView(props: { node: Node; isShowRaw: any }) {
               <ul style={{ "list-style-type": "none", "padding-left": "0" }}>
                 <For each={props.node.children}>
                   {(childNode) => (
-                    <KdlNodeView node={childNode} isShowRaw={props.isShowRaw} />
+                    <KdlNodeView node={childNode} isShowRaw={props.isShowRaw} isTOC={props.isTOC} depth={depth} />
                   )}
                 </For>
               </ul>
@@ -1040,6 +1052,16 @@ export function KdlNodeView(props: { node: Node; isShowRaw: any }) {
         </div>
       </Show>
     </li>
+      <Show when={isShowTOC()}>
+          <a href={"#toc"}
+               style={{
+		    "display": "flex",
+		    "justify-content": "flex-end",
+               }}
+	  >toc</a>
+      </Show>
+
+     </>
   );
 }
 

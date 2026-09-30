@@ -43,12 +43,12 @@ export function TableOfContents(props) {
 
   return (
     <nav class="toc-container" style={{ margin: "10px 0", padding: "10px", background: "#f9f9f9", "border-radius": "4px" }}>
-      <h3 style={{ margin: "0 0 10px 0" }}>目次</h3>
+      <h3 style={{ margin: "0 0 5px 0", "font-size": "15px" }}>[ TOC ]</h3>
       <ul style={{ "list-style-type": "none", padding: "0" }}>
         <For each={toc()}>
           {(item) => (
             <li class={`toc-item depth-${item.level}`} style={{ "margin-left": `${(item.level - 1) * 15}px`, "margin-bottom": "4px" }}>
-              <a href={`#${item.id}`} style={{ color: "#0076d6", "text-decoration": "none" }}>{item.text}</a>
+              <a href={`#${item.id}`} style={{ color: "#0076d6", "text-decoration": "none", "font-size": "14px" }}>{item.text}</a>
             </li>
           )}
         </For>

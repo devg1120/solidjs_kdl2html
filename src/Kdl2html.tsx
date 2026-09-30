@@ -482,14 +482,18 @@ export default function KdlToHtmlApp() {
                 }}
               >
 	      <Show when={isTOC()}>
+	          <div id="toc">
 	          <TableOfContents docRef={doc} kdlInput={kdlInput}/>
+		  </div>
 	      </Show>
               <div  ref={docRef} >
                 <Switch>
                   <Match when={!isShowRaw()}>
                     <For each={parsedNodes()}>
                       {(node) => (
-                        <KdlNodeView node={node} isShowRaw={isShowRaw()} />
+			      <>
+                        <KdlNodeView node={node} isShowRaw={isShowRaw()} isTOC={isTOC()} depth={0}/>
+			</>
                       )}
                     </For>
                   </Match>

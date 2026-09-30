@@ -1,25 +1,25 @@
-const Docs = 
-{
-title: "NEST LIST",
-code: `
-shopping_list {
-    野菜 {
-        "キャベツ"
-        "にんじん"
-        "トマト"
-    }
-    果物 {
-        "りんご"
-        "バナナ"
-    }
-    日用品 {
-        "ティッシュペーパー"
-        "洗剤"
-    }
-}
+const Docs = {
+  title: "NEST LIST",
+  file:  new URL(import.meta.url).pathname.split('/').pop(),
+  code: `
   
-`
+  shopping_list {
+ a   "野   菜" {
+      a1  "キャベツ"
+      a2 "にんじん"
+      a3  "トマト"
+    }
+ b   果物 {
+      b1  "りんご"
+      b2  "バナナ"
+    }
+ c   日用品 {
+       c1 "ティッシュペーパー"
+       c2  "洗剤"
+    }
 }
+
+`,
+};
 
 export default Docs;
-

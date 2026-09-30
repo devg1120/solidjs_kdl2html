@@ -1,7 +1,7 @@
-const Docs = 
-{
-title: "BOOK INDEX",
-code: `
+const Docs = {
+  title: "BOOK INDEX",
+  file:  new URL(import.meta.url).pathname.split('/').pop(),
+  code: `
 book "SolidJS超入門" {
     chapter "第1章: リアクティビティの本質" {
         section "1-1: Signalとは何か"
@@ -13,8 +13,7 @@ book "SolidJS超入門" {
     }
 }
 
-`
-}
+`,
+};
 
 export default Docs;
-
