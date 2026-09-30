@@ -1,4 +1,12 @@
-import { createSignal, createEffect, createMemo, For, Show, onMount, onCleanup } from "solid-js";
+import {
+  createSignal,
+  createEffect,
+  createMemo,
+  For,
+  Show,
+  onMount,
+  onCleanup,
+} from "solid-js";
 import { parse } from "kdljs";
 import type { Node } from "kdljs";
 import { Docs } from "./Docs";
@@ -18,11 +26,15 @@ export default function KdlToHtmlApp() {
   const [selectedValue, setSelectedValue] = createSignal(FP);
 
   function selectChange(to) {
-       let v = selectedValue() + to;
-       if (v < 0) { v = 0; }
-       if (v > Docs.length -1) { v = Docs.length -1; }
-       setSelectedValue(v)
-       /*
+    let v = selectedValue() + to;
+    if (v < 0) {
+      v = 0;
+    }
+    if (v > Docs.length - 1) {
+      v = Docs.length - 1;
+    }
+    setSelectedValue(v);
+    /*
      setKdlInput(Docs[selectedValue()].code);
      let file = '-'
      if ('file' in Docs[selectedValue()]) {
@@ -33,15 +45,14 @@ export default function KdlToHtmlApp() {
   }
 
   createEffect(() => {
-     let v = selectedValue();
-     setKdlInput(Docs[v].code);
-     let file = '-'
-     if ('file' in Docs[v]) {
-          file =  Docs[v].file
-      }
-      setKdlFile(file)
+    let v = selectedValue();
+    setKdlInput(Docs[v].code);
+    let file = "-";
+    if ("file" in Docs[v]) {
+      file = Docs[v].file;
+    }
+    setKdlFile(file);
   });
-
 
   const [isDebug, setIsDebug] = createSignal(false);
   const toggle_debug = () => setIsDebug(!isDebug());
@@ -60,13 +71,12 @@ export default function KdlToHtmlApp() {
 
   const [kdlInput, setKdlInput] = createSignal(Docs[selectedValue()].code);
 
-  let file = '-'
-  if ('file' in Docs[selectedValue()]) {
-       file =  Docs[selectedValue()].file
-   }
+  let file = "-";
+  if ("file" in Docs[selectedValue()]) {
+    file = Docs[selectedValue()].file;
+  }
 
-  const [kdlFile, setKdlFile]   = createSignal(file)
-
+  const [kdlFile, setKdlFile] = createSignal(file);
 
   onMount(() => {
     document.body.style.margin = "0";
@@ -76,23 +86,22 @@ export default function KdlToHtmlApp() {
     const handleKeyDown = (event: KeyboardEvent) => {
       if (event.shiftKey && event.key === "ArrowDown") {
         event.preventDefault(); // 必要に応じてデフォルトのスクロール挙動を防止
-	selectChange(1)
-     } else if (event.shiftKey && event.key === "ArrowUp") {
+        selectChange(1);
+      } else if (event.shiftKey && event.key === "ArrowUp") {
         event.preventDefault(); // 必要に応じてデフォルトのスクロール挙動を防止
-	selectChange(-1)
+        selectChange(-1);
       }
     };
     document.addEventListener("keydown", handleKeyDown);
-
-
   });
 
   onCleanup(() => {
-     document.removeEventListener("keydown", handleKeyDown);
+    document.removeEventListener("keydown", handleKeyDown);
   });
 
   const [leftWidth, setLeftWidth] = createSignal(50);
   let containerRef: HTMLDivElement | undefined;
+  let docRef: HTMLDivElement | undefined;
 
   const handleMouseDown = (e: MouseEvent) => {
     e.preventDefault();
@@ -239,7 +248,7 @@ export default function KdlToHtmlApp() {
           value={selectedValue()}
           onChange={(e) => {
             setSelectedValue(Number(e.currentTarget.value));
-	    /*
+            /*
             setKdlInput(Docs[Number(e.currentTarget.value)].code);
   let file = '-'
   if ('file' in Docs[selectedValue()]) {
@@ -254,10 +263,10 @@ export default function KdlToHtmlApp() {
           </For>
         </select>
 
-	<label
+        <label
           style={{
-             display: "inline-block", 
-            "background-color":  "lightgray" ,
+            display: "inline-block",
+            "background-color": "lightgray",
             margin: "0px 0px 0px 30px",
             padding: "6px 20px",
             width: "200px",
@@ -265,21 +274,23 @@ export default function KdlToHtmlApp() {
             "border-radius": "3px",
             "font-size": "14px",
           }}
-	
-	     >{kdlFile()}</label>
+        >
+          {kdlFile()}
+        </label>
 
-	<label
+        <label
           style={{
-             display: "inline-block", 
-            "background-color":  "#ffffff" ,
+            display: "inline-block",
+            "background-color": "#ffffff",
             margin: "0px 0px 0px 10px",
             padding: "6px 1px",
             width: "40px",
             "font-size": "14px",
-	    "text-align": "right",
+            "text-align": "right",
           }}
-	
-	     >{selectedValue()+1}/{Docs.length}</label>
+        >
+          {selectedValue() + 1}/{Docs.length}
+        </label>
 
         <button
           onClick={toggle_debug}
@@ -425,7 +436,7 @@ export default function KdlToHtmlApp() {
                       "font-family": "monospace",
                       "font-size": "13px",
                       "white-space": "pre-wrap",
-		      "word-break": "break-all",
+                      "word-break": "break-all",
                     }}
                   >
                     {errorObj().debug_error}
@@ -453,6 +464,7 @@ export default function KdlToHtmlApp() {
                   "padding-left": "0px",
                 }}
               >
+              <div  ref={docRef} >
                 <Switch>
                   <Match when={!isShowRaw()}>
                     <For each={parsedNodes()}>
@@ -467,6 +479,7 @@ export default function KdlToHtmlApp() {
                     </For>
                   </Match>
                 </Switch>
+		</div>
               </ul>
             </Show>
 

@@ -4,11 +4,9 @@ import type { Node } from "kdljs";
 import { Docs } from "./Docs";
 
 import { KdlSvgDiagram } from "./KdlSvgDiagram";
-import { KdlChart } from "./KdlChart"
+import { KdlChart } from "./KdlChart";
 
-import { CodeBlock } from './CodeBlock';
-
-
+import { CodeBlock } from "./CodeBlock";
 
 // --- テーブル表示用のコンポーネント ---
 export function KdlTableView(props: { rows: Node[] }) {
@@ -220,17 +218,23 @@ export function KdlTableView_Raw(props: { rows: Node[] }) {
 
 // --- 各ノードを表示する子コンポーネント（ノード名非表示版） ---
 export function KdlNodeView(props: { node: Node; isShowRaw: any }) {
+  //let tmp = String(props.node.values[0]);
+  //let tmp2 = tmp.replaceAll(' ', '_')
+  //props.node.values[0] = tmp2;
 
-   //let tmp = String(props.node.values[0]);
-   //let tmp2 = tmp.replaceAll(' ', '_')
-   //props.node.values[0] = tmp2;
-   
- // 【新規追加】ノード名が "split" の場合にインライン SplitView として構築
+  // 【新規追加】ノード名が "split" の場合にインライン SplitView として構築
   if (props.node.name === "split" && props.node.children) {
     const orientation = () => {
-      const valOrient = props.node.values && props.node.values.length > 0 ? String(props.node.values[0]) : "";
-      const propOrient = props.node.properties?.orientation ? String(props.node.properties.orientation) : "";
-      return (valOrient === "horizontal" || propOrient === "horizontal") ? "horizontal" : "vertical";
+      const valOrient =
+        props.node.values && props.node.values.length > 0
+          ? String(props.node.values[0])
+          : "";
+      const propOrient = props.node.properties?.orientation
+        ? String(props.node.properties.orientation)
+        : "";
+      return valOrient === "horizontal" || propOrient === "horizontal"
+        ? "horizontal"
+        : "vertical";
     };
 
     const [paneSize, setPaneSize] = createSignal(50);
@@ -276,7 +280,7 @@ export function KdlNodeView(props: { node: Node; isShowRaw: any }) {
           width: "100%",
           height: orientation() === "vertical" ? "350px" : "500px",
           background: "#fdfdfd",
-          overflow: "hidden"
+          overflow: "hidden",
         }}
       >
         {/* 第1パネル */}
@@ -287,10 +291,14 @@ export function KdlNodeView(props: { node: Node; isShowRaw: any }) {
             padding: "10px",
             "box-sizing": "border-box",
             "overflow-y": "auto",
-            "min-height": 0, "min-width": 0
+            "min-height": 0,
+            "min-width": 0,
           }}
         >
-          <Show when={firstChild()} fallback={<p style={{ color: "#999" }}>Panel 1</p>}>
+          <Show
+            when={firstChild()}
+            fallback={<p style={{ color: "#999" }}>Panel 1</p>}
+          >
             <KdlNodeView node={firstChild()!} isShowRaw={props.isShowRaw} />
           </Show>
         </div>
@@ -304,7 +312,7 @@ export function KdlNodeView(props: { node: Node; isShowRaw: any }) {
             cursor: orientation() === "vertical" ? "col-resize" : "row-resize",
             "background-color": "#ccc",
             transition: "background-color 0.2s",
-            flex: "0 0 auto"
+            flex: "0 0 auto",
           }}
           onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = "#999")}
           onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = "#ccc")}
@@ -313,15 +321,21 @@ export function KdlNodeView(props: { node: Node; isShowRaw: any }) {
         {/* 第2パネル */}
         <div
           style={{
-            width: orientation() === "vertical" ? `${100 - paneSize()}%` : "100%",
-            height: orientation() === "vertical" ? "100%" : `${100 - paneSize()}%`,
+            width:
+              orientation() === "vertical" ? `${100 - paneSize()}%` : "100%",
+            height:
+              orientation() === "vertical" ? "100%" : `${100 - paneSize()}%`,
             padding: "10px",
             "box-sizing": "border-box",
             "overflow-y": "auto",
-            "min-height": 0, "min-width": 0
+            "min-height": 0,
+            "min-width": 0,
           }}
         >
-          <Show when={secondChild()} fallback={<p style={{ color: "#999" }}>Panel 2</p>}>
+          <Show
+            when={secondChild()}
+            fallback={<p style={{ color: "#999" }}>Panel 2</p>}
+          >
             <KdlNodeView node={secondChild()!} isShowRaw={props.isShowRaw} />
           </Show>
         </div>
@@ -335,7 +349,7 @@ export function KdlNodeView(props: { node: Node; isShowRaw: any }) {
     const gap = () => String(props.node.properties?.gap || "10px");
 
     return (
-      <div 
+      <div
         style={{
           display: "grid",
           "grid-template-columns": `repeat(${cols()}, minmax(0, 1fr))`,
@@ -343,7 +357,7 @@ export function KdlNodeView(props: { node: Node; isShowRaw: any }) {
           margin: "16px 0",
           width: "100%",
           "max-width": "100%",
-          "box-sizing": "border-box"
+          "box-sizing": "border-box",
         }}
       >
         <For each={props.node.children}>
@@ -352,12 +366,12 @@ export function KdlNodeView(props: { node: Node; isShowRaw: any }) {
             const childSpan = () => Number(childNode.properties?.span) || 1;
 
             return (
-              <div 
-                style={{ 
-                  "min-width": 0, 
+              <div
+                style={{
+                  "min-width": 0,
                   "box-sizing": "border-box",
                   // 【新規追加】指定された数値マス分、グリッドの横幅を結合して広げるスタイル
-                  "grid-column": `span ${childSpan()}` 
+                  "grid-column": `span ${childSpan()}`,
                 }}
               >
                 <KdlNodeView node={childNode} isShowRaw={props.isShowRaw} />
@@ -369,7 +383,6 @@ export function KdlNodeView(props: { node: Node; isShowRaw: any }) {
     );
   }
 
-
   if (props.node.name === "tabs" && props.node.children) {
     // 有効な "tab" 子ノードだけを抽出
     const tabNodes = createMemo(() => {
@@ -378,8 +391,10 @@ export function KdlNodeView(props: { node: Node; isShowRaw: any }) {
 
     // 各タブのラベル名（valuesの第1引数）を配列化
     const tabLabels = createMemo(() => {
-      return tabNodes().map((tab, idx) => 
-        tab.values && tab.values.length > 0 ? String(tab.values[0]) : `Tab ${idx + 1}`
+      return tabNodes().map((tab, idx) =>
+        tab.values && tab.values.length > 0
+          ? String(tab.values[0])
+          : `Tab ${idx + 1}`,
       );
     });
 
@@ -393,24 +408,24 @@ export function KdlNodeView(props: { node: Node; isShowRaw: any }) {
     });
 
     return (
-      <div 
-        style={{ 
-          margin: "16px 0", 
-          border: "1px solid #e0e0e0", 
-          "border-radius": "8px", 
+      <div
+        style={{
+          margin: "16px 0",
+          border: "1px solid #e0e0e0",
+          "border-radius": "8px",
           background: "#fff",
           "max-width": "560px",
           overflow: "hidden",
-          "box-shadow": "0 2px 5px rgba(0,0,0,0.03)"
+          "box-shadow": "0 2px 5px rgba(0,0,0,0.03)",
         }}
       >
         {/* タブのボタンを並べるヘッダー領域 */}
-        <div 
-          style={{ 
-            display: "flex", 
-            "background-color": "#f8f9fa", 
+        <div
+          style={{
+            display: "flex",
+            "background-color": "#f8f9fa",
             "border-bottom": "1px solid #e0e0e0",
-            overflow: "auto"
+            overflow: "auto",
           }}
         >
           <For each={tabLabels()}>
@@ -420,7 +435,10 @@ export function KdlNodeView(props: { node: Node; isShowRaw: any }) {
                 style={{
                   padding: "10px 20px",
                   border: "none",
-                  "border-bottom": activeTab() === idx() ? "3px solid #0076d6" : "3px solid transparent",
+                  "border-bottom":
+                    activeTab() === idx()
+                      ? "3px solid #0076d6"
+                      : "3px solid transparent",
                   background: activeTab() === idx() ? "#fff" : "transparent",
                   color: activeTab() === idx() ? "#0076d6" : "#666",
                   "font-weight": activeTab() === idx() ? "bold" : "normal",
@@ -428,7 +446,7 @@ export function KdlNodeView(props: { node: Node; isShowRaw: any }) {
                   cursor: "pointer",
                   transition: "all 0.2s ease",
                   "white-space": "nowrap",
-                  outline: "none"
+                  outline: "none",
                 }}
               >
                 {label}
@@ -439,11 +457,22 @@ export function KdlNodeView(props: { node: Node; isShowRaw: any }) {
 
         {/* アクティブなタブの内容を表示するコンテンツ領域 */}
         <div style={{ padding: "16px", "min-height": "60px" }}>
-          <Show 
-            when={activeChildren().length > 0} 
-            fallback={<p style={{ color: "#999", "font-size": "13px", margin: 0 }}>タブの中身が空です。</p>}
+          <Show
+            when={activeChildren().length > 0}
+            fallback={
+              <p style={{ color: "#999", "font-size": "13px", margin: 0 }}>
+                タブの中身が空です。
+              </p>
+            }
           >
-            <ul style={{ margin: 0, padding: 0, "list-style-type": "none", "padding-left": "0px" }}>
+            <ul
+              style={{
+                margin: 0,
+                padding: 0,
+                "list-style-type": "none",
+                "padding-left": "0px",
+              }}
+            >
               <For each={activeChildren()}>
                 {(childNode) => (
                   <KdlNodeView node={childNode} isShowRaw={props.isShowRaw} />
@@ -460,46 +489,56 @@ export function KdlNodeView(props: { node: Node; isShowRaw: any }) {
   if (props.node.name === "scrollbox" && props.node.children) {
     // プロパティから高さ(height)を取得。未指定ならデフォルトで150px
     const boxHeight = () => String(props.node.properties?.height || "150px");
-    const boxTitle = () => props.node.values && props.node.values.length > 0 
-      ? String(props.node.values[0]) 
-      : null;
+    const boxTitle = () =>
+      props.node.values && props.node.values.length > 0
+        ? String(props.node.values[0])
+        : null;
 
     return (
-      <div 
-        style={{ 
-          margin: "12px 0", 
-          border: "1px solid #ddd", 
-          "border-radius": "6px", 
+      <div
+        style={{
+          margin: "12px 0",
+          border: "1px solid #ddd",
+          "border-radius": "6px",
           background: "#fafafa",
           "max-width": "560px",
-          overflow: "hidden"
+          overflow: "hidden",
         }}
       >
         {/* 小窓のヘッダータイトル（KDLの第1引数に文字列があれば表示） */}
         <Show when={boxTitle()}>
-          <div style={{ 
-            padding: "6px 12px", 
-            "background-color": "#eeeeee", 
-            "border-bottom": "1px solid #ddd", 
-            "font-size": "12px", 
-            "font-weight": "bold", 
-            color: "#555" 
-          }}>
+          <div
+            style={{
+              padding: "6px 12px",
+              "background-color": "#eeeeee",
+              "border-bottom": "1px solid #ddd",
+              "font-size": "12px",
+              "font-weight": "bold",
+              color: "#555",
+            }}
+          >
             📋 {boxTitle()}
           </div>
         </Show>
 
         {/* スクロール領域本体 */}
-        <div 
-          style={{ 
-            height: boxHeight(), 
-            "overflow-y": "auto", 
-            "overflow-x": "hidden", 
+        <div
+          style={{
+            height: boxHeight(),
+            "overflow-y": "auto",
+            "overflow-x": "hidden",
             padding: "10px",
-            "box-sizing": "border-box"
+            "box-sizing": "border-box",
           }}
         >
-          <ul style={{ margin: 0, padding: 0, "list-style-type": "none", "padding-left": "0px" }}>
+          <ul
+            style={{
+              margin: 0,
+              padding: 0,
+              "list-style-type": "none",
+              "padding-left": "0px",
+            }}
+          >
             <For each={props.node.children}>
               {(childNode) => (
                 <KdlNodeView node={childNode} isShowRaw={props.isShowRaw} />
@@ -526,218 +565,241 @@ export function KdlNodeView(props: { node: Node; isShowRaw: any }) {
   }
 
   if (props.node.name === "img" && props.node.children) {
-	  let width = "300";
-	  let height = "200";
+    let width = "300";
+    let height = "200";
 
-	  if ( "properties" in props.node) {
-	      if ( "width" in props.node.properties) {
-	         width = props.node.properties.width;
-              }
-	      if ( "height" in props.node.properties) {
-	         height = props.node.properties.height;
-              }
+    if ("properties" in props.node) {
+      if ("width" in props.node.properties) {
+        width = props.node.properties.width;
+      }
+      if ("height" in props.node.properties) {
+        height = props.node.properties.height;
+      }
+    }
 
-	  }
-
-    return <img style={{ }} src={props.node.values[0]} width={width} height={height} ></img>;
-
+    return (
+      <img
+        style={{}}
+        src={props.node.values[0]}
+        width={width}
+        height={height}
+      ></img>
+    );
   }
 
   if (props.node.name === "map" && props.node.children) {
-	  let width = "600";
-	  let height = "450";
+    let width = "600";
+    let height = "450";
 
-	  if ( "properties" in props.node) {
-	      if ( "width" in props.node.properties) {
-	         width = props.node.properties.width;
-              }
-	      if ( "height" in props.node.properties) {
-	         height = props.node.properties.height;
-              }
+    if ("properties" in props.node) {
+      if ("width" in props.node.properties) {
+        width = props.node.properties.width;
+      }
+      if ("height" in props.node.properties) {
+        height = props.node.properties.height;
+      }
+    }
 
-	  }
-
-    return <iframe 
-	       src={props.node.values[0]}
-       	       width={width}
-       	       height={height}
-       	       style="border:0;" 
-       	       allowfullscreen="true" 
-       	       loading="lazy" 
-       	       referrerpolicy="strict-origin-when-cross-origin">
-	</iframe>
+    return (
+      <iframe
+        src={props.node.values[0]}
+        width={width}
+        height={height}
+        style="border:0;"
+        allowfullscreen="true"
+        loading="lazy"
+        referrerpolicy="strict-origin-when-cross-origin"
+      ></iframe>
+    );
   }
 
   if (props.node.name === "www" && props.node.children) {
-	  let width = "600";
-	  let height = "450";
+    let width = "600";
+    let height = "450";
 
-	  if ( "properties" in props.node) {
-	      if ( "width" in props.node.properties) {
-	         width = props.node.properties.width;
-              }
-	      if ( "height" in props.node.properties) {
-	         height = props.node.properties.height;
-              }
+    if ("properties" in props.node) {
+      if ("width" in props.node.properties) {
+        width = props.node.properties.width;
+      }
+      if ("height" in props.node.properties) {
+        height = props.node.properties.height;
+      }
+    }
 
-	  }
-
-    return <iframe 
-	       src={props.node.values[0]}
-       	       width={width}
-       	       height={height}
-       	       style="border:0;" 
-       	       allowfullscreen="true" 
-       	       loading="lazy" 
-       	       referrerpolicy="strict-origin-when-cross-origin">
-	</iframe>
+    return (
+      <iframe
+        src={props.node.values[0]}
+        width={width}
+        height={height}
+        style="border:0;"
+        allowfullscreen="true"
+        loading="lazy"
+        referrerpolicy="strict-origin-when-cross-origin"
+      ></iframe>
+    );
   }
 
   if (props.node.name === "qt" && props.node.children) {
-    let color = "lightgray"
-    let width = "6"
+    let color = "lightgray";
+    let width = "6";
     //let text_  = props.node.values[0] ;
-	  if ( "properties" in props.node) {
-	      if ( "color" in props.node.properties) {
-	         color = props.node.properties.color;
-              }
-	      if ( "width" in props.node.properties) {
-	         width = props.node.properties.width;
-              }
-
-	  }
-    return <div 
-            style={{ 
-		    "border-left" : `solid ${width}px ${color}`,
-		    "padding-left" : "10px ",
-
-	    }}>
-	       {props.node.values[0]}
-               <Show when={ props.node.children &&  props.node.children.length > 0  } >
-                 <For each={props.node.children}>
-                   {(childNode) => (
-                     <KdlNodeView node={childNode} isShowRaw={props.isShowRaw} />
-                   )}
-	          </For>
-
-               </Show>
-    </div>;
+    if ("properties" in props.node) {
+      if ("color" in props.node.properties) {
+        color = props.node.properties.color;
+      }
+      if ("width" in props.node.properties) {
+        width = props.node.properties.width;
+      }
+    }
+    return (
+      <div
+        style={{
+          "border-left": `solid ${width}px ${color}`,
+          "padding-left": "10px ",
+        }}
+      >
+        {props.node.values[0]}
+        <Show when={props.node.children && props.node.children.length > 0}>
+          <For each={props.node.children}>
+            {(childNode) => (
+              <KdlNodeView node={childNode} isShowRaw={props.isShowRaw} />
+            )}
+          </For>
+        </Show>
+      </div>
+    );
   }
 
   if (props.node.name === "checklist" && props.node.children) {
-    let color = "lightgray"
-    let width = "6"
+    let color = "lightgray";
+    let width = "6";
     //let text_  = props.node.values[0] ;
-	  if ( "properties" in props.node) {
-	      if ( "color" in props.node.properties) {
-	         color = props.node.properties.color;
-              }
-	      if ( "width" in props.node.properties) {
-	         width = props.node.properties.width;
-              }
-
-	  }
-    return <div 
-            style={{ 
-
-	    }}>
-	       {props.node.values[0]}
-	       <div class="checkbox-group"
-                     style={{ 
-                            display: "block",
-                            "margin-top": "4px"
-         	          }}
-	       >
-
-               <Show when={ props.node.children &&  props.node.children.length > 0  } >
-                 <For each={props.node.children}>
-                   {(childNode) => (
-                        <label
-                         style={{ 
-                          display: "block",
-                          "margin-bottom": "4px",
-                          "margin-left": "4px",
-                          "padding-left": "4px"
-                          }}
-                        >
-                           <Show when={ childNode.properties &&   childNode.properties.checked == "true"}
-			        fallback={
-                                     <>
-				     <input type="checkbox" name="item" value="apple" style={{"margin-right":"10px"}} />{childNode.values[0]} 
-				     </>
-			        } >
-                               <input type="checkbox" checked name="item" value="apple" style={{"margin-right":"10px"}} />{childNode.values[0]} 
-			  </Show>
-                        </label>
-                   )}
-	          </For>
-
-               </Show>
-	       </div>
-    </div>;
+    if ("properties" in props.node) {
+      if ("color" in props.node.properties) {
+        color = props.node.properties.color;
+      }
+      if ("width" in props.node.properties) {
+        width = props.node.properties.width;
+      }
+    }
+    return (
+      <div style={{}}>
+        {props.node.values[0]}
+        <div
+          class="checkbox-group"
+          style={{
+            display: "block",
+            "margin-top": "4px",
+          }}
+        >
+          <Show when={props.node.children && props.node.children.length > 0}>
+            <For each={props.node.children}>
+              {(childNode) => (
+                <label
+                  style={{
+                    display: "block",
+                    "margin-bottom": "4px",
+                    "margin-left": "4px",
+                    "padding-left": "4px",
+                  }}
+                >
+                  <Show
+                    when={
+                      childNode.properties &&
+                      childNode.properties.checked == "true"
+                    }
+                    fallback={
+                      <>
+                        <input
+                          type="checkbox"
+                          name="item"
+                          value="apple"
+                          style={{ "margin-right": "10px" }}
+                        />
+                        {childNode.values[0]}
+                      </>
+                    }
+                  >
+                    <input
+                      type="checkbox"
+                      checked
+                      name="item"
+                      value="apple"
+                      style={{ "margin-right": "10px" }}
+                    />
+                    {childNode.values[0]}
+                  </Show>
+                </label>
+              )}
+            </For>
+          </Show>
+        </div>
+      </div>
+    );
   }
 
   if (props.node.name === "code" && props.node.children) {
-    let color   = "#000000"
-    let bgcolor = "#E6E6FA"
-    let width   = "fit-content"
-    let radius  = "8"
+    let color = "#000000";
+    let bgcolor = "#E6E6FA";
+    let width = "fit-content";
+    let radius = "8";
     //let text_  = props.node.values[0] ;
 
-    if ( "properties" in props.node) {
-      if ( "color" in props.node.properties) {
-         color = props.node.properties.color;
+    if ("properties" in props.node) {
+      if ("color" in props.node.properties) {
+        color = props.node.properties.color;
       }
-      if ( "bgcolor" in props.node.properties) {
-         bgcolor = props.node.properties.bgcolor;
+      if ("bgcolor" in props.node.properties) {
+        bgcolor = props.node.properties.bgcolor;
       }
-      if ( "width" in props.node.properties) {
-         width = `${props.node.properties.width}px`;
+      if ("width" in props.node.properties) {
+        width = `${props.node.properties.width}px`;
       }
-
     }
-    return <pre
-            style={{ 
-              "background-color" : bgcolor,
-              "color" : color,
-	      "border-radius": `${radius}px`,
-	      "width": width,
-	      "padding": "14px 10px",
-	    }}>
-	    <code
-            style={{ 
+    return (
+      <pre
+        style={{
+          "background-color": bgcolor,
+          color: color,
+          "border-radius": `${radius}px`,
+          width: width,
+          padding: "14px 10px",
+        }}
+      >
+        <code
+          style={
+            {
               //"background-color" : bgcolor
-	    }}
-	    >
-	       {props.node.values[0]}
-	    </code>
-    </pre>;
+            }
+          }
+        >
+          {props.node.values[0]}
+        </code>
+      </pre>
+    );
   }
 
   if (props.node.name === "hcode" && props.node.children) {
-    let color   = "#000000"
-    let bgcolor = "#E6E6FA"
-    let width   = "fit-content"
-    let radius  = "8"
+    let color = "#000000";
+    let bgcolor = "#E6E6FA";
+    let width = "fit-content";
+    let radius = "8";
     //let text_  = props.node.values[0] ;
 
-    if ( "properties" in props.node) {
-      if ( "color" in props.node.properties) {
-         color = props.node.properties.color;
+    if ("properties" in props.node) {
+      if ("color" in props.node.properties) {
+        color = props.node.properties.color;
       }
-      if ( "bgcolor" in props.node.properties) {
-         bgcolor = props.node.properties.bgcolor;
+      if ("bgcolor" in props.node.properties) {
+        bgcolor = props.node.properties.bgcolor;
       }
-      if ( "width" in props.node.properties) {
-         width = `${props.node.properties.width}px`;
+      if ("width" in props.node.properties) {
+        width = `${props.node.properties.width}px`;
       }
-
     }
-    
-    return  <CodeBlock code={props.node.values[0]} language="javascript" />
 
+    return <CodeBlock code={props.node.values[0]} language="javascript" />;
   }
-
 
   if (props.node.name === "gap" && props.node.children) {
     let size = "30px";
@@ -749,29 +811,43 @@ export function KdlNodeView(props: { node: Node; isShowRaw: any }) {
 
   if (props.node.name === "line" && props.node.children) {
     let size = "1";
-    let color = "lightgray"
+    let color = "lightgray";
     //let color = "#FF0000"
     if (props.node.values.length > 0) {
-      size = props.node.values[0] ;
+      size = props.node.values[0];
     }
     if (props.node.values.length > 1) {
-      color = props.node.values[1] ;
+      color = props.node.values[1];
     }
-    return <div style={{"border-top": `${size}px solid  ${color}`, "margin-top": "10px" }}></div>;
+    return (
+      <div
+        style={{
+          "border-top": `${size}px solid  ${color}`,
+          "margin-top": "10px",
+        }}
+      ></div>
+    );
     //return <div style={{"border-top": `${size}px solid  #FF0000`, "margin-top": "10px" }}></div>;
-
   }
 
   if (props.node.name === "center-title" && props.node.children) {
     let title = "---";
     if (props.node.values.length > 0) {
-      title = props.node.values[0] ;
+      title = props.node.values[0];
     }
-    return <div style={{ "margin-top": "10px", "text-align": "center", 
-                "font-size": "14px" , 
-		"font-weight": "bold",
-		"color": "#0080FF"
-		}}>{title}</div>;
+    return (
+      <div
+        style={{
+          "margin-top": "10px",
+          "text-align": "center",
+          "font-size": "14px",
+          "font-weight": "bold",
+          color: "#0080FF",
+        }}
+      >
+        {title}
+      </div>
+    );
   }
   // 子要素があり、かつそれらすべてがプロパティを持っていて「さらにその下がネストしていない」場合のみ部分テーブル化
   const shouldRenderTable = createMemo(() => {
@@ -815,8 +891,7 @@ export function KdlNodeView(props: { node: Node; isShowRaw: any }) {
     };
   });
 
-
-// 【機能拡張】各インデックス（Word単位）のスタイルを動的に動出する関数
+  // 【機能拡張】各インデックス（Word単位）のスタイルを動的に動出する関数
   const getWordStyle = (index: number) => {
     const propsMap = props.node.properties || {};
 
@@ -824,7 +899,9 @@ export function KdlNodeView(props: { node: Node; isShowRaw: any }) {
     const getPropList = (key: string): string[] => {
       const val = propsMap[key];
       if (!val) return [];
-      return String(val).split(",").map(s => s.trim());
+      return String(val)
+        .split(",")
+        .map((s) => s.trim());
     };
 
     // 各個別スタイルの抽出（単語別配列から取得、なければノード全体の単一指定、それもなければデフォルト）
@@ -835,12 +912,18 @@ export function KdlNodeView(props: { node: Node; isShowRaw: any }) {
 
     const customColor = colors[index] || String(propsMap.color || "#333");
     const customBg = bgs[index] || String(propsMap.bg_color || "transparent");
-    
+
     // 太字判定 (単語個別 or 全体指定)
-    const isBold = bolds[index] === "true" || propsMap.bold === true || String(propsMap.bold) === "true";
+    const isBold =
+      bolds[index] === "true" ||
+      propsMap.bold === true ||
+      String(propsMap.bold) === "true";
     // 斜体判定 (単語個別 or 全体指定)
-    const isItalic = italics[index] === "true" || propsMap.italic === true || String(propsMap.italic) === "true";
-    
+    const isItalic =
+      italics[index] === "true" ||
+      propsMap.italic === true ||
+      String(propsMap.italic) === "true";
+
     const fontSize = String(propsMap.size || "14px");
 
     return {
@@ -849,26 +932,38 @@ export function KdlNodeView(props: { node: Node; isShowRaw: any }) {
       "font-size": fontSize,
       "font-style": isItalic ? "italic" : "normal",
       "background-color": customBg !== "none" ? customBg : "transparent",
-      padding: customBg !== "transparent" && customBg !== "none" ? "2px 6px" : "0px",
-      "border-radius": customBg !== "transparent" && customBg !== "none" ? "3px" : "0px",
+      padding:
+        customBg !== "transparent" && customBg !== "none" ? "2px 6px" : "0px",
+      "border-radius":
+        customBg !== "transparent" && customBg !== "none" ? "3px" : "0px",
       "line-height": "1.6",
       "margin-right": "4px", // 単語間のスペースを表現
-      "display": "inline-block", // 背景色のパディングを綺麗に見せるため
+      display: "inline-block", // 背景色のパディングを綺麗に見せるため
       "white-space": "pre-wrap", //スペース数を維持
-      "word-break": "break-all",  //GS GUSA
-      "overflow-wrap": "anywhere",   //GS GUSA
+      "word-break": "break-all", //GS GUSA
+      "overflow-wrap": "anywhere", //GS GUSA
     };
   };
 
   // 表示から除外する装飾用プロパティのリストを更新
   const displayPropertyValues = createMemo(() => {
     if (!props.node.properties) return [];
-    const filterKeys = ["bold", "color", "size", "italic", "bg_color", "colors", "bgs", "bolds", "italics"];
+    const filterKeys = [
+      "bold",
+      "color",
+      "size",
+      "italic",
+      "bg_color",
+      "colors",
+      "bgs",
+      "bolds",
+      "italics",
+    ];
     return Object.entries(props.node.properties)
       .filter(([key]) => !filterKeys.includes(key))
       .map(([_, val]) => String(val));
   });
-/*
+  /*
   // 【機能拡張】装飾用のスタイルプロパティ（bg_colorを追加）を除外してテキストを抽出
   const displayPropertyValues = createMemo(() => {
     if (!props.node.properties) return [];
@@ -884,15 +979,14 @@ export function KdlNodeView(props: { node: Node; isShowRaw: any }) {
 
   return (
     <li
-     id={props.node.name} 
+      id={props.node.name}
       style={{
         "margin-bottom": "8px",
         "list-style-type": "none",
         "margin-left": "10px",
       }}
     >
-
-{/*
+      {/*
       <Show when={props.node.values && props.node.values.length > 0}>
         <span style={textStyle()}>
           {props.node.values.map((v) => String(v)).join(", ")}
@@ -908,13 +1002,11 @@ export function KdlNodeView(props: { node: Node; isShowRaw: any }) {
         </span>
       </Show>
 */}
-    {/* 【変更箇所】単語（値の配列要素）ごとに For で回し、インデックスに応じたスタイルを個別に適用 */}
+      {/* 【変更箇所】単語（値の配列要素）ごとに For で回し、インデックスに応じたスタイルを個別に適用 */}
       <Show when={props.node.values && props.node.values.length > 0}>
         <For each={props.node.values}>
           {(value, index) => (
-            <span style={getWordStyle(index())}>
-              {String(value)}
-            </span>
+            <span style={getWordStyle(index())}>{String(value)}</span>
           )}
         </For>
       </Show>
@@ -922,7 +1014,9 @@ export function KdlNodeView(props: { node: Node; isShowRaw: any }) {
       {/* プロパティ（属性）の表示 */}
       <Show when={displayPropertyValues().length > 0}>
         <span style={getWordStyle(0)}>
-          <Show when={props.node.values && props.node.values.length > 0}>&nbsp;</Show>
+          <Show when={props.node.values && props.node.values.length > 0}>
+            &nbsp;
+          </Show>
           {displayPropertyValues().join(" ")}
         </span>
       </Show>

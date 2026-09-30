@@ -34,5 +34,3 @@ export const Docs = [
 
 //const filename = new URL(import.meta.url).pathname.split('/').pop();
 //console.log(filename)
-
-
