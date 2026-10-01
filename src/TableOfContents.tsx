@@ -21,7 +21,7 @@ export function TableOfContents(props) {
     requestAnimationFrame(() => {
       const headings = contentArea.querySelectorAll("li");
       const items: TocItem[] = [];
-
+/*
       headings.forEach((heading) => {
         if (!heading.id || !heading.id.startsWith("h")) {
           return;
@@ -37,6 +37,43 @@ export function TableOfContents(props) {
           //level:  1,
         });
       });
+*/
+   headings.forEach((heading) => {
+      if (!heading.id || !heading.id.startsWith("h")) {
+        return;
+      }
+
+      // 【修正箇所】heading直下のコンテナ（div, ul, tableなど）以外の、
+      // 自身のテキストを構成する要素（spanなど）のテキストのみを抽出して結合する
+      const textParts: string[] = [];
+      heading.childNodes.forEach((node) => {
+        // テキストノード、または特定のコンテナ以外のインライン要素(span等)からのみ取得
+        if (node.nodeType === Node.ELEMENT_NODE) {
+          const el = node as HTMLElement;
+          // 子ノードコンテナ(ul, div, iframe, table等)はTOCのテキスト抽出から除外する
+          if (!["UL", "DIV", "IFRAME", "TABLE", "A"].includes(el.tagName)) {
+            if (el.textContent) {
+              textParts.push(el.textContent.trim());
+            }
+          }
+        } else if (node.nodeType === Node.TEXT_NODE) {
+          if (node.textContent) {
+            const t = node.textContent.trim();
+            if (t) textParts.push(t);
+          }
+        }
+      });
+
+      // 配列の要素を半角スペース（または空文字）で結合。空なら "_"
+      const text = textParts.length > 0 ? textParts.join(" ") : "_";
+
+      console.log(text);
+      items.push({
+        id: heading.id,
+        text: text,
+        level: Number(heading.id.length)/2 ,
+      });
+    });
 
       setToc(items);
     });
