@@ -989,18 +989,13 @@ export function KdlNodeView(props: { node: Node; isShowRaw: any , isTOC:boolean,
 	}
             return false;
     }
-    function isShowTOC_() {
-        if( props.isTOC && props.tocid.split('-').length == 4) {
-            return true;
-	}
-            return false;
-    }
-                                           /* INDEX */
+  const head = "h123"
+
   return (
 	  <>
     <li
-      id={props.node.name}
-      //id={tocid}
+      id={props.node.name }
+      //id={props.node.name + "_" + tocid}
       tocid={tocid}
       style={{
         "margin-bottom": "8px",

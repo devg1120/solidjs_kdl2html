@@ -34,6 +34,7 @@ export function TableOfContents(props) {
           id: heading.id,
           text: text,
           level: Number(heading.id.length) - 1,
+          //level:  1,
         });
       });
 
