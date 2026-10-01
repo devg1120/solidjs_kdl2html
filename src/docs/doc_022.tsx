@@ -7,7 +7,7 @@ const Docs = {
   toc: true,
   code: `
 
-"SolidJS超入門" {
+h- "SolidJS超入門" {
    h- "第1章: リアクティビティの本質" {
       h-  "1-1: Signalとは何か" {
         h- "(1) TEST1"  {
