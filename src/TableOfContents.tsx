@@ -28,8 +28,8 @@ export function TableOfContents(props) {
         }
 
         const firstChild = heading.children[0];
-        const text = firstChild ? (firstChild.textContent || "-") : (heading.textContent || "-");
-
+        const text = firstChild ? (firstChild.textContent || "_") : (heading.textContent || "_");
+        console.log(text);
         items.push({
           id: heading.id,
           text: text,
