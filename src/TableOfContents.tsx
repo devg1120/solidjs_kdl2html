@@ -39,7 +39,7 @@ export function TableOfContents(props) {
       });
 */
    headings.forEach((heading) => {
-      if (!heading.id || !heading.id.startsWith("h")) {
+      if (!heading.id || !heading.id.startsWith("h-")) {
         return;
       }
 

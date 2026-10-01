@@ -990,11 +990,17 @@ export function KdlNodeView(props: { node: Node; isShowRaw: any , isTOC:boolean,
             return false;
     }
 
+const isHeadingNode = () => props.node.name.startsWith("h-")
+
+// 見出しノードであれば tocid を使い、それ以外はノードのバッティングを防ぐため別のプレフィックスにするかノード名にする
+const elementId = () => isHeadingNode() ? tocid :props.node.name ;
+
 
   return (
 	  <>
     <li
-      id={props.node.name }
+      //id={props.node.name }
+      id={elementId()}
       tocid={tocid}
 
       style={{
