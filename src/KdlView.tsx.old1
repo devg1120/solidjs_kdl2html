@@ -217,12 +217,11 @@ export function KdlTableView_Raw(props: { rows: Node[] }) {
 }
 
 // --- 各ノードを表示する子コンポーネント（ノード名非表示版） ---
-export function KdlNodeView(props: { node: Node; isShowRaw: any , isTOC:boolean, tocid:string,depth: number}) {
+export function KdlNodeView(props: { node: Node; isShowRaw: any , isTOC:boolean, depth: number}) {
   //let tmp = String(props.node.values[0]);
   //let tmp2 = tmp.replaceAll(' ', '_')
   //props.node.values[0] = tmp2;
   const depth = props.depth + 1;
-  const tocid = props.tocid + "_T";
 
   // 【新規追加】ノード名が "split" の場合にインライン SplitView として構築
   if (props.node.name === "split" && props.node.children) {
@@ -988,12 +987,11 @@ export function KdlNodeView(props: { node: Node; isShowRaw: any , isTOC:boolean,
 	}
             return false;
     }
-                                           /* INDEX */
+
   return (
 	  <>
     <li
       id={props.node.name}
-      tocid={tocid}
       style={{
         "margin-bottom": "8px",
         "list-style-type": "none",
@@ -1043,7 +1041,7 @@ export function KdlNodeView(props: { node: Node; isShowRaw: any , isTOC:boolean,
               <ul style={{ "list-style-type": "none", "padding-left": "0" }}>
                 <For each={props.node.children}>
                   {(childNode) => (
-                    <KdlNodeView node={childNode} isShowRaw={props.isShowRaw} isTOC={props.isTOC} tocid={tocid} depth={depth} />
+                    <KdlNodeView node={childNode} isShowRaw={props.isShowRaw} isTOC={props.isTOC} depth={depth} />
                   )}
                 </For>
               </ul>

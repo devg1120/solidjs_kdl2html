@@ -492,7 +492,7 @@ export default function KdlToHtmlApp() {
                     <For each={parsedNodes()}>
                       {(node) => (
 			      <>
-                        <KdlNodeView node={node} isShowRaw={isShowRaw()} isTOC={isTOC()} depth={0}/>
+                        <KdlNodeView node={node} isShowRaw={isShowRaw()} isTOC={isTOC()} tocid={"h"} depth={0}/>
 			</>
                       )}
                     </For>
